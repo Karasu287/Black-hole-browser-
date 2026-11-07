@@ -1,10 +1,35 @@
-# 📜 История изменений (Changelog) — Black hole Browser
+# 📜 Changelog / История изменений — Black hole Browser
 
-Все ключевые изменения, обновления, оптимизации и исправления в Black hole Browser.
+All notable changes, optimizations, and features across Black hole Browser releases.
 
 ## [v1.14.0] — 2026-11-08
 
-### 🚀 Автообновления в 1 клик, перенос вкладок между окнами, интеграция с GitHub и адаптивные настройки
+### 🇬🇧 English: One-Click Auto-Updates, Cross-Window Tab Dragging, GitHub Integration & Compact Settings
+- **🔄 One-Click Auto-Update System (Auto-Update Engine)**:
+  - Built-in update engine (`updateManager.js`) with background version checking on startup and every 4 hours.
+  - Supports the online version manifest (`version.json`) with an HTTP redirect-following network layer (up to 5 redirect levels for GitHub release assets).
+  - Floating cyberpunk notification prompt with formatted release changelog, pulsing neon indicator, and 1-click update action.
+  - Real-time streaming download of the installer to `%TEMP%` displaying download percentage, size (MB), and live transfer speed.
+  - Automatic detached execution of the new installer and clean shutdown of the running browser.
+  - "Remind later" option to dismiss update prompts cleanly without nagging.
+  - Dedicated **Updates** tab in Settings with manual "Check now" button, update card, and customizable feed URL.
+- **🪟 Seamless Cross-Window Tab Dragging**:
+  - Overhauled external tab dragging physics across windows.
+  - Tabs can now be smoothly dragged from one window (e.g. YouTube, VK) and dropped into the tab strip of another browser window.
+  - Eliminates unwanted duplicate window creation when moving tabs between existing windows.
+  - Full and fluid preservation of page state, URL, and browser navigation history.
+- **🐙 Official GitHub Repository Integration**:
+  - Browser officially migrated to GitHub: `https://github.com/Karasu287/Black-hole-browser-`.
+  - Added a glass-morphic floating badge with the GitHub Octocat logo in the bottom-right corner of the New Tab page ("we are now on GitHub!").
+  - Added a direct repository shortcut button to the Settings modal footer.
+- **⚙️ Compact Responsive Settings Navigation**:
+  - Optimized Settings tabs: shortened labels, streamlined padding (`7px 10px`), and font sizing (`12px`).
+  - All 5 tabs ("General", "Shortcuts", "Shield", "Privacy & Cache", "Updates") fit seamlessly into one row on any monitor resolution and Windows DPI scale (100%–150%).
+  - Fixed full-card purple overlay bug caused by unconstrained toggle switch sliders.
+
+---
+
+### 🇷🇺 Русский: Автообновления в 1 клик, перенос вкладок между окнами, интеграция с GitHub и адаптивные настройки
 - **🔄 Автоматическое отслеживание обновлений и установка в 1 клик (Auto-Update System)**:
   - Разработан полнофункциональный менеджер обновлений (`updateManager.js`) с регулярной фоновой проверкой версий (при старте и каждые 4 часа).
   - Поддержка онлайн-манифеста версий (`version.json`) с надежным сетевым протоколом и автоматическим следованием до 5 уровней HTTP/HTTPS редиректов (для прямых ссылок GitHub Releases).
