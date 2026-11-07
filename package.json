@@ -1,0 +1,32 @@
+{
+  "name": "black-hole-browser",
+  "productName": "Black hole Browser",
+  "version": "1.14.0",
+  "description": "Black hole Browser - Ultra-optimized Dark Chromium Browser with Chrome Extension Support",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --enable-logging",
+    "build": "electron-builder"
+  },
+  "keywords": [
+    "browser",
+    "chromium",
+    "electron",
+    "chrome-extensions",
+    "dark-mode",
+    "optimized"
+  ],
+  "author": "Antigravity",
+  "license": "MIT",
+  "dependencies": {
+    "adm-zip": "^0.5.18"
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-packager": "^17.1.2",
+    "innosetup-compiler": "^6.3.1",
+    "png-to-ico": "^3.0.2",
+    "rcedit": "^5.0.2"
+  }
+}
