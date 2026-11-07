@@ -1,94 +1,123 @@
 # 🌌 Black hole Browser (v1.14.0)
 
-Сверхбыстрый, максимально оптимизированный веб-браузер на базе **Chromium (Blink + V8)** с глубокой тёмной темой (**OLED Dark**), встроенным блокировщиком рекламы (**Black hole Shield**), нативной поддержкой **расширений Google Chrome (Manifest V2 и Manifest V3)**, контекстным медиа-меню, автопропуском рекламы в видеоплеерах, системой фонового обновления в 1 клик и переносом вкладок между окнами.
+[![GitHub Release](https://img.shields.io/github/v/release/Karasu287/Black-hole-browser-?color=a855f7&label=Release)](https://github.com/Karasu287/Black-hole-browser-/releases)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20x64-brightgreen.svg)](https://github.com/Karasu287/Black-hole-browser-/releases)
+
+An ultra-fast, deeply optimized web browser powered by **Chromium (Blink + V8)** featuring an **OLED Dark** aesthetic, built-in ad blocker (**Black hole Shield**), native support for **Google Chrome Extensions (Manifest V2 & V3)**, context media menu, 1-click automatic updates, and cross-window tab dragging.
 
 ---
 
-## 🚀 Ключевые возможности
-
-### 1. 🛡️ Встроенный блокировщик рекламы (Black hole Shield)
-- **Сетевой уровень фильтрации**: перехват и блокировка нежелательных сетевых запросов через `session.defaultSession.webRequest.onBeforeRequest` без необходимости в сторонних расширениях.
-- **Блокировка баннеров и трекеров**: Google Ads, DoubleClick, Яндекс Директ, Яндекс Метрика, AdFox, Mail.ru, Criteo, Taboola, Outbrain, 1xBet, казино и трекеры слежки.
-- **Универсальный автопропуск рекламы в видеоплеерах (Kodik, Alloha, VideoCDN, YouTube и др.)**:
-  - Мгновенная перемотка видеорекламы и прероллов в конец.
-  - Автоматический клик по любым кнопкам «Пропустить» / «Skip».
-  - Защита от анти-адблока и блокировка кликандеров/попандеров.
-- **Быстрое управление (Shield Modal)**:
-  - Иконка 🛡️ в адресной строке с живым бейджем заблокированных элементов.
-  - Управление белым списком для текущего сайта в 1 клик и глобальное переключение защиты.
-
-### 2. 🧩 Поддержка расширений Google Chrome
-- Поддержка стандартов **Manifest V2** и **Manifest V3**.
-- Установка расширений в 1 клик:
-  - Напрямую из **Chrome Web Store** кнопкой «Установить в Chrome».
-  - Из архивов **`.crx`** и **`.zip`**.
-  - Из распакованных папок (содержащих `manifest.json`).
-  - Простое перетаскивание файлов (**Drag & Drop**) в окно менеджера расширений.
-- Интерактивная панель расширений с поддержкой всплывающих окон (Popup).
-
-### 3. 🖼️ Контекстное медиа-меню (ПКМ)
-- **Умный анализ медиа**: детекция исходного качества изображений и видео (`data-src`, `srcset`, `background-image`).
-- **Меню для изображений**:
-  - Быстрое сохранение в исходном формате.
-  - Конвертация на лету: в **PNG**, **JPEG**, **WebP**.
-  - Апскейл разрешения: **Оригинал**, **2x Upscale**, **4x Ultra HD**.
-  - Пакетное скачивание всех изображений страницы.
-- **Меню для видео**:
-  - Скачивание через встроенный многопоточный менеджер.
-  - Режим «Картинка в картинке» (PiP).
-
-### 4. ⚡ Экстремальная оптимизация и экономия памяти
-- **Tab Hibernation (Спящий режим для вкладок)**:
-  - Автоматически выгружает фоновые неактивные вкладки из RAM (освобождая до **80% оперативной памяти**).
-  - Вкладка помечается значком `💤` и мгновенно просыпается при клике.
-  - Вкладки со звуком защищены от засыпания.
-- **Аппаратное ускорение Chromium**:
-  - `Zero-Copy Tile Rasterization` и `GPU Canvas OOP Rasterization` (плавная работа 60/120+ FPS).
-  - Настройка сборщика мусора V8.
-
-### 5. 📁 Папки и группировка вкладок (Tab Groups)
-- Создание цветных папок (8 цветовых тем).
-- Сворачивание и разворачивание групп вкладок в 1 клик.
-- Drag-and-drop перетаскивание вкладок и папок.
-
-### 6. 🔑 Менеджер паролей
-- Автоматическое предложение сохранения паролей при авторизации.
-- Автозаполнение логинов и паролей (Autofill).
-- Импорт паролей из Chrome, Edge, Yandex Browser, Opera, CSV и JSON.
-- Экспорт паролей в CSV.
+[🇬🇧 English Description](#-english-description) • [🇷🇺 Русское описание](#-русское-описание)
 
 ---
 
-## 📜 Ченджлог
+## 🇬🇧 English Description
 
-Подробный список изменений всех версий доступен в файле **[`CHANGELOG.md`](file:///c:/ai%20barmalei/CHANGELOG.md)**.
+### 🚀 Key Features
 
----
+#### 1. 🔄 1-Click Auto-Updates (Auto-Update Engine)
+- **Background Checks**: Automatically checks for new versions on startup and every 4 hours via GitHub Releases.
+- **Cyberpunk Prompt**: Displays a floating prompt with the formatted changelog, real-time download progress bar (MB, % and speed), and 1-click installation.
+- **Dedicated Settings Tab**: Full update manager in Settings with manual check button and custom feed URL options.
 
-## 🕹 Горячие клавиши (Shortcuts)
+#### 2. 🪟 Seamless Cross-Window Tab Dragging
+- Freely move any tab between different open browser windows (e.g., YouTube, VK, docs) without creating duplicate windows.
+- Full page state, URL, and navigation history are seamlessly preserved.
 
-| Сочетание клавиш | Действие |
+#### 3. 🛡️ Built-in Ad Blocker (Black hole Shield)
+- **Network-Level Filtering**: Intercepts and blocks unwanted requests via `session.defaultSession.webRequest.onBeforeRequest` without third-party extensions.
+- **Banners & Trackers Blocking**: Google Ads, DoubleClick, Yandex Direct, Yandex Metrika, AdFox, Mail.ru, Criteo, Taboola, Outbrain, betting sites, and trackers.
+- **Universal Video Ad Auto-Skip (YouTube, Kodik, Alloha, VideoCDN, Rutube, etc.)**:
+  - Instant forward seek of pre-rolls and mid-rolls.
+  - Automatic clicking of "Skip" buttons with anti-spam debounce.
+  - Anti-adblock and clickunder/popunder protection.
+- **Quick Shield Controls**:
+  - 🛡️ icon in the address bar with live blocked element count.
+  - 1-click whitelist toggle for the current domain.
+
+#### 4. 🧩 Google Chrome Extensions Support
+- Full support for **Manifest V2** and **Manifest V3**.
+- 1-click installation:
+  - Directly from **Chrome Web Store**.
+  - From **`.crx`** and **`.zip`** archives.
+  - From unpacked extension folders (`manifest.json`).
+  - Simple **Drag & Drop** into the Extensions Manager.
+- Interactive toolbar with extension popup support.
+
+#### 5. ⚡ Extreme Optimization & Memory Saver
+- **Tab Hibernation**: Automatically unloads idle background tabs from RAM (freeing up to **80% RAM**). Audio tabs are protected from sleeping.
+- **Game Booster (CPU Prioritization)**: Drops browser priority when games (Dota 2, CS2, etc.) are focused, dedicating 100% CPU/GPU resources to gaming while background music continues with 0% CPU overhead.
+- **Hardware Acceleration**: Zero-copy tile rasterization and OOP GPU canvas rendering for smooth 60/120+ FPS.
+
+#### 6. 📁 Tab Groups & Folders
+- 8 cyber color schemes for custom tab folders.
+- 1-click group collapse and expand.
+- Drag-and-drop tab organization.
+
+#### 7. 🔑 Password Manager
+- Autofill and save prompts on login forms.
+- Import from Chrome, Edge, Yandex Browser, Opera, CSV, and JSON.
+- Export to CSV.
+
+### 🕹 Hotkeys & Shortcuts
+
+| Shortcut | Action |
 |---|---|
-| `Ctrl + T` | Открыть новую вкладку |
-| `Ctrl + W` | Закрыть текущую вкладку |
-| `Ctrl + Shift + T` | Восстановить последнюю закрытую вкладку |
-| `Ctrl + R` / `F5` | Перезагрузить страницу |
-| `Ctrl + Shift + R` | Перезагрузить с очисткой кэша |
-| `Ctrl + L` | Перейти в адресную строку (Omnibox) |
-| `Ctrl + D` | Добавить страницу в закладки / убрать из закладок |
-| `Ctrl + H` | Открыть историю посещений |
-| `Ctrl + B` | Открыть менеджер закладок |
-| `Ctrl + Shift + B` | Скрыть / показать панель закладок |
-| `Ctrl + F` | Поиск по странице |
-| `Ctrl + 1` .. `Ctrl + 9` | Быстрое переключение на вкладку № 1..9 |
-| `Esc` | Закрыть модальное окно или панель поиска |
+| `Ctrl + T` | Open new tab |
+| `Ctrl + W` | Close current tab |
+| `Ctrl + Shift + T` | Reopen closed tab |
+| `Ctrl + R` / `F5` | Reload page |
+| `Ctrl + Shift + R` | Hard reload (bypass cache) |
+| `Ctrl + L` | Focus address bar |
+| `Ctrl + D` | Bookmark / unbookmark page |
+| `Ctrl + H` | Fullscreen History |
+| `Ctrl + J` | Fullscreen Downloads |
+| `Ctrl + B` | Bookmarks Manager |
+| `Ctrl + Shift + B` | Toggle Bookmarks Bar |
+| `Ctrl + F` | Find in page |
+| `Ctrl + 1` .. `Ctrl + 9` | Switch to tab 1..9 |
+| `Esc` | Close modal / search bar |
 
----
-
-## 📦 Установка и запуск
-
-- **Установщик Windows**: `Black_Hole_Browser_Setup_v1.14.0.exe` на рабочем столе или в [Releases](https://github.com/Karasu287/Black-hole-browser-/releases).
-- **Запуск из исходников**:
+### 📦 Installation & Setup
+- **Windows Installer**: Download `Black_Hole_Browser_Setup_v1.14.0.exe` from [Releases](https://github.com/Karasu287/Black-hole-browser-/releases).
+- **Run from Source**:
 ```powershell
+npm install
 npm start
 ```
+
+---
+
+## 🇷🇺 Русское описание
+
+### 🚀 Ключевые возможности
+
+#### 1. 🔄 Автоматическое отслеживание обновлений в 1 клик
+- Встроенный менеджер версий с регулярной фоновой проверкой через GitHub Releases.
+- Киберпанк-уведомление с оформленным списком изменений (Changelog), полосой прогресса скачивания в реальном времени и автоматической установкой в 1 клик.
+- Полноценная вкладка **«Обновления»** в настройках браузера.
+
+#### 2. 🪟 Бесшовный перенос вкладок между окнами
+- Свободный перенос вкладок между любыми открытыми окнами браузера без создания лишних окон-дубликатов.
+- Полное сохранение истории навигации, состояния страниц и аудиопотоков.
+
+#### 3. 🛡️ Встроенный блокировщик рекламы (Black hole Shield)
+- Сетевой уровень фильтрации баннеров, трекеров, кликандеров и всплывающих окон.
+- Автоматический пропуск рекламы в видеоплеерах (YouTube, Kodik, Alloha, Rutube и др.).
+- Быстрое управление белым списком для сайтов в 1 клик.
+
+#### 4. 🧩 Поддержка расширений Google Chrome
+- Нативная поддержка стандартов **Manifest V2** и **Manifest V3**.
+- Установка напрямую из Chrome Web Store или перетаскиванием файлов `.crx`, `.zip` и папок.
+
+#### 5. ⚡ Игровой режим и экстремальная оптимизация
+- **Game Booster**: автоматическое снижение приоритета браузера при запуске игр (Dota 2, CS2 и др.), отдавая 100% мощности процессора и видеокарты игре.
+- **Tab Hibernation**: выгрузка неактивных вкладок из RAM (освобождение до 80% памяти).
+- 0% CPU при воспроизведении фоновой музыки и аппаратное ускорение GPU.
+
+#### 6. 📁 Папки и группировка вкладок (Tab Groups)
+- 8 неоновых цветовых тем, сворачивание и разворачивание папок в один клик.
+
+#### 7. 🔑 Менеджер паролей
+- Автозаполнение, надежное локальное шифрование, импорт и экспорт.
