@@ -10,7 +10,7 @@
     "⚙️ Опция запуска «При открытии браузера открывать новую вкладку»",
     "🔄 Автоматическое отслеживание обновлений и установка в 1 клик на всех устройствах"
   ],
-  "downloadUrl": "https://raw.githubusercontent.com/Karasu-dev/black-hole-browser/main/output_installer/Black_Hole_Browser_Setup_v1.13.3.exe",
+  "downloadUrl": "https://github.com/Karasu287/Black-hole-browser-/releases/download/v1.13.3/Black_Hole_Browser_Setup_v1.13.3.exe",
   "pageUrl": "https://t.me/blackhole_browser",
   "mandatory": false
 }
