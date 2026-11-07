@@ -1,16 +1,15 @@
 {
-  "version": "1.13.3",
-  "releaseDate": "2026-11-05",
-  "title": "Black Hole Browser v1.13.3",
+  "version": "1.14.0",
+  "releaseDate": "2026-11-08",
+  "title": "Black Hole Browser v1.14.0",
   "changelog": [
-    "🎮 Игровой режим и приоритет CPU (Game Booster) для максимального FPS в играх",
-    "⚡ 0% CPU при воспроизведении музыки и автозаморозка фоновых визуализаций",
-    "🎬 Исправление зависания заставок Rutube и умный антиспам в плеерах",
-    "🖱️ Удобная зона перетягивания окна в правом верхнем углу (Top-Right Drag Spacer)",
-    "⚙️ Опция запуска «При открытии браузера открывать новую вкладку»",
-    "🔄 Автоматическое отслеживание обновлений и установка в 1 клик на всех устройствах"
+    "🔄 Автоматическое отслеживание обновлений и установка в 1 клик на всех устройствах",
+    "🪟 Умный и плавный перенос вкладок между разными окнами браузера без дубликатов",
+    "🐙 Официальный репозиторий проекта на GitHub и кнопка быстрого перехода",
+    "⚙️ Компактные адаптивные вкладки в панели настроек с поддержкой любых разрешений",
+    "⚡ Оптимизация сетевых запросов и проверка версий с прямым скачиванием установщика"
   ],
-  "downloadUrl": "https://github.com/Karasu287/Black-hole-browser-/releases/download/v1.13.3/Black_Hole_Browser_Setup_v1.13.3.exe",
-  "pageUrl": "https://t.me/blackhole_browser",
+  "downloadUrl": "https://github.com/Karasu287/Black-hole-browser-/releases/download/v1.14.0/Black_Hole_Browser_Setup_v1.14.0.exe",
+  "pageUrl": "https://github.com/Karasu287/Black-hole-browser-",
   "mandatory": false
 }
