@@ -79,14 +79,6 @@ An ultra-fast, deeply optimized web browser powered by **Chromium (Blink + V8)**
 | `Ctrl + 1` .. `Ctrl + 9` | Switch to tab 1..9 |
 | `Esc` | Close modal / search bar |
 
-### 📦 Installation & Setup
-- **Windows Installer**: Download `Black_Hole_Browser_Setup_v1.15.0.exe` from [Releases](https://github.com/Karasu287/Black-hole-browser-/releases).
-- **Run from Source**:
-```powershell
-npm install
-npm start
-```
-
 ---
 
 ## 🇷🇺 Русское описание
