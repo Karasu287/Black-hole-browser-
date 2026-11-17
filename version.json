@@ -1,15 +1,15 @@
 {
-  "version": "1.15.0",
-  "releaseDate": "2026-11-17",
-  "title": "Black Hole Browser v1.15.0",
+  "version": "1.15.1",
+  "releaseDate": "2026-11-18",
+  "title": "Black Hole Browser v1.15.1 (Stability & Alt-Tab Hotfix)",
   "changelog": [
-    "🖼️ Кастомизация фона в стиле Wallpaper Engine: смещение X/Y, зум 50–250%, отражение и 5 режимов",
-    "⚡ Глобальная палитра неона: 8 киберпанк-пресетов + свободный Color Picker для всего браузера",
-    "🎬 Универсальный PiP с неоновой кнопкой на Twitch, Rutube, VK Видео, Кинопоиске и Дзене",
-    "🌑 Регулировка затемнения (0–90%) и кинематографичного размытия (0–20px) на новой вкладке",
-    "🛠️ Расширенное окно настроек 820px: полный показ «Горячие клавиши» и идеальная центровка Shield"
+    "🛡️ Устранение вылетов при переключении через Alt+Tab и в фоновом режиме",
+    "⚡ Стабилизация Game Booster: предотвращение зависания GPU Watchdog и IPC Chromium",
+    "🎬 Троттлинг обновлений MediaSession и оптимизация поиска видео в DOM для плеера PiP",
+    "💾 Оптимизация дискового ввода-вывода (I/O) при блокировке рекламы и трекеров",
+    "📝 Добавлено локальное логирование сбоев в browser_crash.log"
   ],
-  "downloadUrl": "https://github.com/Karasu287/Black-hole-browser-/releases/download/v1.15.0/Black_Hole_Browser_Setup_v1.15.0.exe",
+  "downloadUrl": "https://github.com/Karasu287/Black-hole-browser-/releases/download/v1.15.1/Black_Hole_Browser_Setup_v1.15.1.exe",
   "pageUrl": "https://github.com/Karasu287/Black-hole-browser-",
   "mandatory": false
 }
