@@ -1,12 +1,13 @@
 {
   "name": "black-hole-browser",
   "productName": "Black hole Browser",
-  "version": "1.14.0",
+  "version": "1.15.0",
   "description": "Black hole Browser - Ultra-optimized Dark Chromium Browser with Chrome Extension Support",
   "main": "src/main/main.js",
   "scripts": {
     "start": "electron .",
     "dev": "electron . --enable-logging",
+    "sync-version": "node scripts/sync_version.js",
     "build": "electron-builder"
   },
   "keywords": [
