@@ -575,7 +575,7 @@ class StorageManager {
       this.data.adBlockStats = { totalBlocked: 0 };
     }
     this.data.adBlockStats.totalBlocked = (this.data.adBlockStats.totalBlocked || 0) + count;
-    this.save();
+    this.saveDebounced(5000);
     return this.data.adBlockStats;
   }
 
