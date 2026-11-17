@@ -1,0 +1,3457 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Новая вкладка</title>
+  <style>
+    :root {
+      --bg: #000000;
+      --card-bg: #07070b;
+      --card-hover: #0e0e15;
+      --border: #181824;
+      --accent: #a855f7;
+      --accent-glow: rgba(168, 85, 247, 0.35);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --success: #10b981;
+      --danger: #ef4444;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    body {
+      background-color: #000000;
+      color: var(--text);
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 36px 20px 60px 20px;
+      overflow-y: auto;
+      user-select: none;
+      transition: padding 0.3s cubic-bezier(0.16, 1, 0.3, 1), justify-content 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    body.changelog-collapsed {
+      justify-content: center;
+      padding: 24px 20px;
+      overflow-y: hidden;
+    }
+
+    body::-webkit-scrollbar {
+      width: 8px;
+    }
+    body::-webkit-scrollbar-track {
+      background: #000000;
+    }
+    body::-webkit-scrollbar-thumb {
+      background: #181b26;
+      border-radius: 4px;
+      border: 2px solid #000000;
+    }
+    body::-webkit-scrollbar-thumb:hover {
+      background: var(--accent);
+    }
+
+    .container {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 680px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      margin-top: 0;
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    body.changelog-collapsed .container {
+      transform: translateY(-20px);
+    }
+    .clock-widget {
+      text-align: center;
+    }
+    .clock-time {
+      font-size: 64px;
+      font-weight: 700;
+      letter-spacing: -1.5px;
+      background: linear-gradient(135deg, #ffffff 40%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .clock-date {
+      font-size: 15px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      text-transform: capitalize;
+      font-weight: 500;
+    }
+
+    /* Search Box */
+    .search-box {
+      width: 100%;
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.5);
+      transition: all 0.25s ease;
+    }
+    .search-box:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow), 0 16px 40px rgba(0,0,0,0.65);
+      transform: translateY(-2px);
+    }
+    .search-engine-select {
+      background: #181b26;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 7px 12px;
+      border-radius: 16px;
+      outline: none;
+      cursor: pointer;
+    }
+    .search-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 15px;
+      padding: 10px 4px;
+    }
+    .search-btn {
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .search-btn:hover {
+      transform: scale(1.05);
+      background: #9333ea;
+    }
+
+    /* Shortcuts Grid */
+    .shortcuts-wrapper {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 4px;
+    }
+    .shortcuts-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 14px 18px;
+      max-width: 640px;
+    }
+    .shortcut-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 76px;
+      gap: 8px;
+      text-decoration: none;
+      color: var(--text);
+      cursor: grab;
+      position: relative;
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, box-shadow 0.2s ease;
+      border-radius: 12px;
+      padding: 6px 4px;
+      user-select: none;
+    }
+    .shortcut-item:active {
+      cursor: grabbing;
+    }
+    .shortcut-item.shortcut-add-item {
+      cursor: pointer;
+    }
+    .shortcut-item:hover {
+      transform: translateY(-3px);
+    }
+    .shortcut-item.is-dragging {
+      opacity: 0.35;
+      transform: scale(0.92);
+      border: 1px dashed rgba(168, 85, 247, 0.6);
+      background: rgba(168, 85, 247, 0.06);
+    }
+    .shortcut-item.drag-over {
+      transform: scale(1.08) translateY(-4px);
+    }
+    .shortcut-item.drag-over .shortcut-icon-wrapper {
+      border-color: #c084fc !important;
+      box-shadow: 0 0 22px rgba(192, 132, 252, 0.7), 0 0 8px rgba(168, 85, 247, 0.9) !important;
+      background: #1e1b4b !important;
+    }
+    .shortcut-icon-wrapper {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: #0d0e14;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.6);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .shortcut-item:hover .shortcut-icon-wrapper {
+      border-color: var(--accent);
+      box-shadow: 0 0 16px var(--accent-glow), 0 6px 18px rgba(0,0,0,0.8);
+      background: #141622;
+    }
+    .shortcut-icon {
+      width: 26px;
+      height: 26px;
+      object-fit: contain;
+      border-radius: 4px;
+    }
+    .shortcut-letter-fallback {
+      font-size: 19px;
+      font-weight: 700;
+      color: #ffffff;
+      background: linear-gradient(135deg, #a855f7, #6366f1);
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .shortcut-title {
+      font-size: 11.5px;
+      font-weight: 500;
+      color: #cbd5e1;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 72px;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    }
+    .shortcut-item:hover .shortcut-title {
+      color: #ffffff;
+    }
+
+    /* Add Shortcut Button */
+    .shortcut-add-item .shortcut-icon-wrapper {
+      background: rgba(168, 85, 247, 0.08);
+      border: 1.5px dashed rgba(168, 85, 247, 0.4);
+      color: var(--accent);
+    }
+    .shortcut-add-item:hover .shortcut-icon-wrapper {
+      border-style: solid;
+      border-color: var(--accent);
+      background: rgba(168, 85, 247, 0.2);
+      color: #ffffff;
+    }
+
+    /* Delete & Edit buttons on hover */
+    .shortcut-actions {
+      position: absolute;
+      top: -2px;
+      right: 4px;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      display: flex;
+      gap: 3px;
+      z-index: 10;
+    }
+    .shortcut-item:hover .shortcut-actions {
+      opacity: 1;
+    }
+    .shortcut-btn-action {
+      width: 19px;
+      height: 19px;
+      border-radius: 50%;
+      background: #191b26;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .shortcut-btn-action.btn-del:hover {
+      background: #ef4444;
+      color: #ffffff;
+      border-color: #ef4444;
+    }
+    .shortcut-btn-action.btn-edit:hover {
+      background: var(--accent);
+      color: #ffffff;
+      border-color: var(--accent);
+    }
+
+    /* Modal Dialog for Adding / Editing Shortcuts */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal-card {
+      width: 90%;
+      max-width: 400px;
+      background: #0d0f18;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.85), 0 0 25px rgba(168, 85, 247, 0.25);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      transform: scale(0.95);
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .modal-backdrop.open .modal-card {
+      transform: scale(1);
+    }
+    .modal-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .modal-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .modal-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .modal-input {
+      background: #141622;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: #ffffff;
+      font-size: 13.5px;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .modal-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-glow);
+    }
+    .modal-btn-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .modal-btn {
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .modal-btn-cancel {
+      background: #1e2230;
+      color: #94a3b8;
+    }
+    .modal-btn-cancel:hover {
+      background: #282d40;
+      color: #ffffff;
+    }
+    .modal-btn-save {
+      background: var(--accent);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4);
+    }
+    .modal-btn-save:hover {
+      background: #9333ea;
+      transform: translateY(-1px);
+    }
+
+    /* Performance Widget */
+    .perf-widget {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 22px;
+      background: rgba(18, 20, 28, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      backdrop-filter: blur(10px);
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 10px;
+    }
+    .perf-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--success);
+      font-weight: 600;
+    }
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--success);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--success);
+    }
+
+    /* Changelog Widget */
+    .changelog-wrapper {
+      width: 100%;
+      max-width: 680px;
+      margin-top: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .changelog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 6px;
+    }
+
+    .changelog-header-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #e2e8f0;
+      letter-spacing: 0.3px;
+    }
+
+    .changelog-header-title svg {
+      stroke: var(--accent);
+    }
+
+    .changelog-badge-latest {
+      font-size: 11px;
+      font-weight: 600;
+      color: #c084fc;
+      background: rgba(168, 85, 247, 0.15);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      padding: 2px 9px;
+      border-radius: 12px;
+    }
+
+    .changelog-card {
+      background: rgba(13, 15, 24, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      padding: 22px 24px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      user-select: text;
+    }
+
+    .changelog-card:hover {
+      border-color: rgba(168, 85, 247, 0.3);
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.7), 0 0 25px rgba(168, 85, 247, 0.12);
+    }
+
+    .version-block {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .version-block:last-child {
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    .version-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .version-title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .version-pill {
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(99, 102, 241, 0.3));
+      border: 1px solid rgba(168, 85, 247, 0.45);
+      color: #ffffff;
+      box-shadow: 0 0 10px rgba(168, 85, 247, 0.2);
+    }
+
+    .version-pill.past {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+      color: #94a3b8;
+      box-shadow: none;
+    }
+
+    .version-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #f8fafc;
+    }
+
+    .version-date {
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    .version-items-list {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      list-style: none;
+    }
+
+    .version-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 12.5px;
+      line-height: 1.5;
+      color: #cbd5e1;
+    }
+
+    .version-item-icon {
+      font-size: 14px;
+      flex-shrink: 0;
+      line-height: 1.4;
+    }
+
+    .version-item-content {
+      flex: 1;
+    }
+
+    .version-item-content strong {
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .version-tag {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 4px;
+      margin-right: 5px;
+      vertical-align: middle;
+      display: inline-block;
+    }
+    .tag-purple {
+      background: rgba(168, 85, 247, 0.18);
+      color: #c084fc;
+      border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+    .tag-blue {
+      background: rgba(59, 130, 246, 0.18);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+    .tag-green {
+      background: rgba(16, 185, 129, 0.18);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .tag-orange {
+      background: rgba(249, 115, 22, 0.18);
+      color: #fb923c;
+      border: 1px solid rgba(249, 115, 22, 0.3);
+    }
+
+    .changelog-expand-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      width: 100%;
+      margin-top: 4px;
+    }
+    .changelog-expand-btn:hover {
+      background: rgba(168, 85, 247, 0.15);
+      border-color: rgba(168, 85, 247, 0.3);
+      color: #ffffff;
+    }
+    .changelog-expand-btn svg {
+      transition: transform 0.2s ease;
+    }
+
+    /* Bottom-left floating/docked changelog toggle button */
+    .bottom-left-changelog-toggle {
+      position: fixed;
+      bottom: 22px;
+      left: 22px;
+      z-index: 100;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 15px;
+      background: rgba(13, 15, 24, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      color: #cbd5e1;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+    }
+    .bottom-left-changelog-toggle:hover {
+      background: rgba(168, 85, 247, 0.22);
+      border-color: rgba(168, 85, 247, 0.45);
+      color: #ffffff;
+      box-shadow: 0 8px 28px rgba(168, 85, 247, 0.25);
+      transform: translateY(-2px);
+    }
+    .bottom-left-changelog-toggle svg {
+      stroke: var(--accent);
+      flex-shrink: 0;
+    }
+
+    /* Bottom-right floating GitHub badge */
+    .bottom-right-github-badge {
+      position: fixed;
+      bottom: 22px;
+      right: 22px;
+      z-index: 100;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 14px;
+      background: rgba(13, 15, 24, 0.88);
+      border: 1px solid rgba(168, 85, 247, 0.35);
+      border-radius: 20px;
+      color: #e2e8f0;
+      font-size: 12px;
+      font-weight: 500;
+      text-decoration: none;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 16px rgba(168, 85, 247, 0.15);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+    }
+    .bottom-right-github-badge:hover {
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.25) 0%, rgba(99, 102, 241, 0.25) 100%);
+      border-color: rgba(168, 85, 247, 0.65);
+      color: #ffffff;
+      box-shadow: 0 8px 28px rgba(168, 85, 247, 0.35), 0 0 20px rgba(168, 85, 247, 0.3);
+      transform: translateY(-2px);
+    }
+    .bottom-right-github-badge svg.icon-github {
+      fill: #ffffff;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.4));
+    }
+    .bottom-right-github-badge svg.icon-arrow {
+      stroke: var(--accent);
+      flex-shrink: 0;
+      transition: transform 0.2s ease;
+    }
+    .bottom-right-github-badge:hover svg.icon-arrow {
+      transform: translate(2px, -2px);
+    }
+
+    body.theme-light .bottom-right-github-badge {
+      background: rgba(255, 255, 255, 0.95);
+      border-color: #e2e8f0;
+      color: #334155;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    }
+    body.theme-light .bottom-right-github-badge:hover {
+      background: #ffffff;
+      border-color: var(--accent);
+      color: var(--accent);
+      box-shadow: 0 6px 20px rgba(168, 85, 247, 0.2);
+    }
+    body.theme-light .bottom-right-github-badge svg.icon-github {
+      fill: #0f172a;
+      filter: none;
+    }
+
+    /* Header hide button inside changelog header */
+    .btn-hide-changelog {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #94a3b8;
+      padding: 3px 9px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+    .btn-hide-changelog:hover {
+      background: rgba(239, 68, 68, 0.18);
+      border-color: rgba(239, 68, 68, 0.35);
+      color: #fca5a5;
+    }
+
+    /* Changelog wrapper hidden state */
+    .changelog-wrapper.changelog-hidden {
+      display: none !important;
+    }
+
+    /* Light Theme Styling for New Tab Page */
+    body.theme-light {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --card-hover: #f1f5f9;
+      --border: #e2e8f0;
+      --accent: #9333ea;
+      --accent-glow: rgba(147, 51, 234, 0.25);
+      --text: #0f172a;
+      --text-muted: #64748b;
+      background-color: #f8fafc;
+      background-image: none;
+      color: #0f172a;
+    }
+
+    body.theme-light::-webkit-scrollbar-track {
+      background: #f8fafc;
+    }
+    body.theme-light::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border: 2px solid #f8fafc;
+    }
+
+    body.theme-light .clock-time {
+      background: linear-gradient(135deg, #0f172a 40%, #475569 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    body.theme-light .search-box {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+    }
+    body.theme-light .search-box:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow), 0 8px 30px rgba(0, 0, 0, 0.08);
+      background: #ffffff;
+    }
+
+    body.theme-light .search-input {
+      color: #0f172a;
+    }
+
+    body.theme-light .search-engine-select {
+      background-color: #f1f5f9;
+      color: #0f172a;
+      border-color: #e2e8f0;
+    }
+
+    body.theme-light .shortcut-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      color: #0f172a;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    }
+
+    body.theme-light .shortcut-card:hover {
+      background: #f8fafc;
+      border-color: var(--accent);
+      box-shadow: 0 8px 24px rgba(147, 51, 234, 0.12);
+    }
+
+    body.theme-light .shortcut-title {
+      color: #334155;
+    }
+
+    body.theme-light .shortcut-icon-wrapper {
+      background: #f1f5f9;
+      border-color: #e2e8f0;
+    }
+
+    body.theme-light .perf-widget {
+      background: rgba(255, 255, 255, 0.85);
+      border-color: #e2e8f0;
+      color: #64748b;
+    }
+
+    body.theme-light .changelog-card {
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+    }
+
+    body.theme-light .changelog-header-title {
+      color: #0f172a;
+    }
+
+    body.theme-light .version-pill {
+      background: rgba(147, 51, 234, 0.12);
+      color: #7e22ce;
+      border-color: rgba(147, 51, 234, 0.25);
+    }
+
+    body.theme-light .version-name {
+      color: #0f172a;
+    }
+
+    body.theme-light .version-date {
+      color: #64748b;
+    }
+
+    body.theme-light .version-item-content {
+      color: #334155;
+    }
+
+    body.theme-light .bottom-left-changelog-toggle {
+      background: rgba(255, 255, 255, 0.95);
+      border-color: #e2e8f0;
+      color: #334155;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    }
+
+    body.theme-light .btn-hide-changelog {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+      color: #475569;
+    }
+  
+    /* --- Custom Background & Customization Drawer Styles --- */
+    .custom-bg-layer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+      background-image: url('main_screen_background.png');
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      transform: translate3d(0, 0, 0);
+      transition: filter 0.2s ease, opacity 0.25s ease;
+    }
+
+    .custom-bg-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      pointer-events: none;
+      background-color: rgba(0, 0, 0, 0.3);
+      transition: background-color 0.2s ease;
+    }
+
+    .btn-customize-newtab {
+      position: fixed;
+      top: 18px;
+      right: 20px;
+      z-index: 50;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 14px;
+      background: rgba(10, 10, 16, 0.78);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+    .btn-customize-newtab:hover {
+      color: var(--text);
+      border-color: var(--accent);
+      background: rgba(18, 18, 28, 0.92);
+      box-shadow: 0 4px 20px var(--accent-glow);
+      transform: translateY(-1px);
+    }
+
+    .customize-panel-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 99;
+      opacity: 1;
+      transition: opacity 0.25s ease;
+    }
+    .customize-panel-backdrop.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .customize-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 380px;
+      max-width: 90vw;
+      background: rgba(8, 8, 12, 0.96);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-left: 1px solid var(--border);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      box-shadow: -10px 0 40px rgba(0, 0, 0, 0.8), 0 0 30px var(--accent-glow);
+      transform: translateX(0);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .customize-panel.hidden {
+      transform: translateX(105%);
+      pointer-events: none;
+    }
+    .customize-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .customize-panel-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .customize-panel-title svg {
+      color: var(--accent);
+    }
+    .btn-close-customize {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 18px;
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      transition: all 0.15s ease;
+    }
+    .btn-close-customize:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+    }
+    .customize-panel-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .customize-panel-content::-webkit-scrollbar {
+      width: 6px;
+    }
+    .customize-panel-content::-webkit-scrollbar-thumb {
+      background: #181b26;
+      border-radius: 3px;
+    }
+    .customize-section {
+      background: rgba(14, 14, 22, 0.65);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .customize-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .customize-section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .customize-section-badge {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      background: rgba(255, 255, 255, 0.06);
+      padding: 2px 7px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+    .customize-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin-bottom: 12px;
+    }
+    .neon-presets-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .neon-color-btn {
+      height: 34px;
+      border-radius: 8px;
+      border: 2px solid transparent;
+      background: var(--swatch);
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    .neon-color-btn:hover {
+      transform: scale(1.06);
+      box-shadow: 0 0 14px var(--swatch);
+    }
+    .neon-color-btn.active {
+      border-color: #ffffff;
+      transform: scale(1.08);
+      box-shadow: 0 0 16px var(--swatch);
+    }
+    .custom-color-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(8, 8, 12, 0.7);
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .custom-color-picker-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text);
+      cursor: pointer;
+      flex: 1;
+    }
+    .color-picker-preview {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      display: inline-block;
+    }
+    .custom-neon-picker-input {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: none;
+      background: none;
+      cursor: pointer;
+      padding: 0;
+      -webkit-appearance: none;
+    }
+    .custom-neon-picker-input::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+    .custom-neon-picker-input::-webkit-color-swatch {
+      border: 1.5px solid var(--border);
+      border-radius: 50%;
+    }
+    .custom-neon-hex-input {
+      width: 72px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 11px;
+      font-family: monospace;
+      padding: 5px 8px;
+      text-align: center;
+      text-transform: lowercase;
+      outline: none;
+    }
+    .custom-neon-hex-input:focus {
+      border-color: var(--accent);
+    }
+    .bg-upload-actions {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .btn-customize-action {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-customize-action:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: var(--accent);
+    }
+    .btn-customize-action.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #ffffff;
+      box-shadow: 0 2px 10px var(--accent-glow);
+    }
+    .btn-customize-action.primary:hover {
+      filter: brightness(1.15);
+      box-shadow: 0 4px 16px var(--accent-glow);
+    }
+    .bg-status-text {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+    .customize-range {
+      width: 100%;
+      height: 6px;
+      -webkit-appearance: none;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      outline: none;
+      margin: 8px 0 4px 0;
+      cursor: pointer;
+    }
+    .customize-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent-glow);
+      cursor: pointer;
+      transition: transform 0.1s ease;
+    }
+    .customize-range::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+        /* --- Wallpaper Engine Style Controls --- */
+    .we-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .we-control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 5px 0;
+    }
+    .we-control-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #f1f5f9;
+      min-width: 125px;
+      flex-shrink: 0;
+      user-select: none;
+    }
+    .we-control-label svg {
+      color: #94a3b8;
+      flex-shrink: 0;
+    }
+    .we-select {
+      background: #181924;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 6px;
+      color: #f8fafc;
+      font-size: 12.5px;
+      font-weight: 500;
+      padding: 6px 12px;
+      outline: none;
+      cursor: pointer;
+      flex: 1;
+      max-width: 160px;
+      transition: border-color 0.15s ease;
+    }
+    .we-select:focus, .we-select:hover {
+      border-color: var(--accent, #3b82f6);
+    }
+    .we-select option {
+      background: #111118;
+      color: #f8fafc;
+    }
+    .we-slider-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+    }
+    .we-range {
+      flex: 1;
+      height: 4px;
+      -webkit-appearance: none;
+      background: #232533;
+      border-radius: 2px;
+      outline: none;
+      margin: 0;
+      cursor: pointer;
+    }
+    .we-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 7px;
+      height: 18px;
+      border-radius: 2px;
+      background: var(--accent, #3b82f6);
+      box-shadow: 0 0 8px var(--accent-glow, rgba(59, 130, 246, 0.5));
+      cursor: ew-resize;
+      transition: transform 0.1s ease, filter 0.1s ease;
+    }
+    .we-range::-webkit-slider-thumb:hover {
+      transform: scaleY(1.15);
+      filter: brightness(1.2);
+    }
+    .we-val {
+      font-size: 13px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+      color: #94a3b8;
+      width: 28px;
+      text-align: right;
+      flex-shrink: 0;
+      user-select: none;
+    }
+    .we-checkbox-wrap {
+      display: inline-flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .we-checkbox {
+      display: none;
+    }
+    .we-checkbox-box {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      border: 1.5px solid rgba(255, 255, 255, 0.25);
+      background: #181924;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+    .we-check-icon {
+      opacity: 0;
+      transform: scale(0.6);
+      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+      color: #ffffff;
+    }
+    .we-checkbox:checked + .we-checkbox-box {
+      background: var(--accent, #3b82f6);
+      border-color: var(--accent, #3b82f6);
+      box-shadow: 0 0 10px var(--accent-glow, rgba(59, 130, 246, 0.5));
+    }
+    .we-checkbox:checked + .we-checkbox-box .we-check-icon {
+      opacity: 1;
+      transform: scale(1);
+    }
+  
+  </style>
+</head>
+<body>
+
+  <!-- Dynamic Custom Background and Dimming Layer -->
+  <div id="custom-bg-layer" class="custom-bg-layer"></div>
+  <div id="custom-bg-overlay" class="custom-bg-overlay"></div>
+
+  <!-- Top-Right Floating Appearance / Customization Button -->
+  <button type="button" class="btn-customize-newtab" id="btn-customize-newtab" title="Настроить фон и неоновую подсветку">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle>
+      <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle>
+      <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle>
+      <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle>
+      <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path>
+    </svg>
+    <span>Внешний вид</span>
+  </button>
+
+  <!-- Customization Panel / Drawer -->
+  <div id="customize-panel-backdrop" class="customize-panel-backdrop hidden"></div>
+  <aside id="customize-panel" class="customize-panel hidden" aria-label="Панель персонализации">
+    <div class="customize-panel-header">
+      <div class="customize-panel-title">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path></svg>
+        <span>Персонализация</span>
+      </div>
+      <button type="button" class="btn-close-customize" id="btn-close-customize" title="Закрыть">✕</button>
+    </div>
+
+    <div class="customize-panel-content">
+      <!-- Section: Neon Glow / Accent Color -->
+      <div class="customize-section">
+        <div class="customize-section-header">
+          <span class="customize-section-title">⚡ Неоновая подсветка</span>
+          <span class="customize-section-badge" id="neon-current-badge">#a855f7</span>
+        </div>
+        <div class="customize-desc">Цвет неонового свечения во всём браузере: вкладки, кнопки, PiP-плеер и акценты</div>
+        <div class="neon-presets-grid" id="neon-presets-grid">
+          <button type="button" class="neon-color-btn active" data-color="#a855f7" title="Фиолетовый киберпанк (по умолчанию)" style="--swatch: #a855f7;"></button>
+          <button type="button" class="neon-color-btn" data-color="#00f0ff" title="Неоновый циан" style="--swatch: #00f0ff;"></button>
+          <button type="button" class="neon-color-btn" data-color="#00ff66" title="Матрица / Изумруд" style="--swatch: #00ff66;"></button>
+          <button type="button" class="neon-color-btn" data-color="#ff003c" title="Неоновый рубин" style="--swatch: #ff003c;"></button>
+          <button type="button" class="neon-color-btn" data-color="#ff007f" title="Сакура / Хот пинк" style="--swatch: #ff007f;"></button>
+          <button type="button" class="neon-color-btn" data-color="#ff8800" title="Солнечный янтарь" style="--swatch: #ff8800;"></button>
+          <button type="button" class="neon-color-btn" data-color="#00a8ff" title="Электрик блю" style="--swatch: #00a8ff;"></button>
+          <button type="button" class="neon-color-btn" data-color="#ffe600" title="Кибер золото" style="--swatch: #ffe600;"></button>
+        </div>
+        <div class="custom-color-row">
+          <label class="custom-color-picker-label" for="custom-neon-picker">
+            <span class="color-picker-preview" id="neon-picker-preview" style="background-color: #a855f7;"></span>
+            <span>Свой цвет:</span>
+          </label>
+          <input type="color" id="custom-neon-picker" value="#a855f7" class="custom-neon-picker-input">
+          <input type="text" id="custom-neon-hex" value="#a855f7" maxlength="7" class="custom-neon-hex-input" placeholder="#hex">
+        </div>
+      </div>
+
+      <!-- Section: Background Image -->
+      <div class="customize-section">
+        <div class="customize-section-header">
+          <span class="customize-section-title">🖼️ Фоновое изображение</span>
+        </div>
+        <div class="customize-desc">Установите собственное изображение на главную страницу</div>
+        <div class="bg-upload-actions">
+          <button type="button" class="btn-customize-action primary" id="btn-upload-bg">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            <span>Выбрать фото</span>
+          </button>
+          <button type="button" class="btn-customize-action" id="btn-reset-bg" title="Вернуть стандартный фон">
+            <span>Сбросить</span>
+          </button>
+          <input type="file" id="file-bg-input" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp" style="display: none;">
+        </div>
+        <div id="bg-status-text" class="bg-status-text">Используется стандартный фон</div>
+      </div>
+
+      <!-- Section: Dimming & Blur -->
+      <div class="customize-section">
+        <div class="customize-section-header">
+          <span class="customize-section-title">🌑 Затенение фона</span>
+          <span class="customize-section-badge" id="bg-dim-badge">30%</span>
+        </div>
+        <div class="customize-desc">Накладывает затемнение, сохраняя чёткость и контраст текста и закладок</div>
+        <input type="range" class="customize-range" id="bg-dim-slider" min="0" max="90" step="5" value="30">
+
+        <div class="customize-section-header" style="margin-top: 14px;">
+          <span class="customize-section-title">🌫️ Размытие фона (Blur)</span>
+          <span class="customize-section-badge" id="bg-blur-badge">0px</span>
+        </div>
+        <div class="customize-desc">Мягкий фокус на контенте страницы</div>
+        <input type="range" class="customize-range" id="bg-blur-slider" min="0" max="20" step="1" value="0">
+      </div>
+
+      <!-- Section: Wallpaper Engine Style Alignment & Scale -->
+      <div class="customize-section we-section">
+        <!-- Row 1: Alignment (Выравнивание) -->
+        <div class="we-control-row">
+          <div class="we-control-label">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span>Выравнивание</span>
+          </div>
+          <select id="we-fit-select" class="we-select">
+            <option value="free">Свободный</option>
+            <option value="cover" selected>Заполнить</option>
+            <option value="contain">Вместить</option>
+            <option value="stretch">Растянуть</option>
+            <option value="repeat">Замостить</option>
+          </select>
+        </div>
+
+        <!-- Row 2: Horizontal (Горизонтально) -->
+        <div class="we-control-row">
+          <div class="we-control-label">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 16l-4-4 4-4M17 8l4 4-4 4M3 12h18"/></svg>
+            <span>Горизонтально</span>
+          </div>
+          <div class="we-slider-wrap">
+            <input type="range" id="we-pos-x" class="we-range" min="0" max="100" step="1" value="50">
+            <span class="we-val" id="we-val-pos-x">50</span>
+          </div>
+        </div>
+
+        <!-- Row 3: Vertical (Вертикально) -->
+        <div class="we-control-row">
+          <div class="we-control-label">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 7l-4-4-4 4M8 17l4 4 4-4M12 3v18"/></svg>
+            <span>Вертикально</span>
+          </div>
+          <div class="we-slider-wrap">
+            <input type="range" id="we-pos-y" class="we-range" min="0" max="100" step="1" value="50">
+            <span class="we-val" id="we-val-pos-y">50</span>
+          </div>
+        </div>
+
+        <!-- Row 4: Zoom (Увеличить) -->
+        <div class="we-control-row">
+          <div class="we-control-label">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+            <span>Увеличить</span>
+          </div>
+          <div class="we-slider-wrap">
+            <input type="range" id="we-scale" class="we-range" min="50" max="250" step="1" value="100">
+            <span class="we-val" id="we-val-scale">100</span>
+          </div>
+        </div>
+
+        <!-- Row 5: Flip (Отразить) -->
+        <div class="we-control-row">
+          <div class="we-control-label">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 17l6-6-6-6M12 19h8M20 7l-6 6 6 6M4 5h8"/></svg>
+            <span>Отразить</span>
+          </div>
+          <label class="we-checkbox-wrap">
+            <input type="checkbox" id="we-flip" class="we-checkbox">
+            <span class="we-checkbox-box">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3.5" class="we-check-icon"><polyline points="20 6 9 17 4 12"/></svg>
+            </span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Bottom-Left Floating Changelog Toggle Button -->
+  <button type="button" class="bottom-left-changelog-toggle" id="btn-bottom-left-changelog" title="Показать / скрыть историю обновлений">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+    <span id="bottom-left-changelog-text">Скрыть ченджлог</span>
+  </button>
+
+  <!-- Bottom-Right Floating GitHub Badge -->
+  <a href="https://github.com/Karasu287/Black-hole-browser-" class="bottom-right-github-badge" id="btn-bottom-right-github" title="Мы теперь на GitHub! Перейти в репозиторий" target="_self">
+    <svg class="icon-github" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+    </svg>
+    <span>мы теперь на GitHub!</span>
+    <svg class="icon-arrow" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5">
+      <path d="M7 17L17 7M17 7H7M17 7V17"/>
+    </svg>
+  </a>
+
+  <div class="container">
+    <div class="clock-widget">
+      <div class="clock-time" id="clock-time">12:00</div>
+      <div class="clock-date" id="clock-date">Понедельник, 1 января</div>
+    </div>
+
+    <form class="search-box" id="search-form">
+      <select class="search-engine-select" id="engine-select">
+        <option value="google">Google</option>
+        <option value="yandex">Яндекс</option>
+        <option value="duckduckgo">DuckDuckGo</option>
+        <option value="bing">Bing</option>
+      </select>
+      <input type="text" class="search-input" id="search-query" placeholder="Поиск в интернете или URL..." autofocus autocomplete="off">
+      <button type="submit" class="search-btn" title="Искать">
+        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      </button>
+    </form>
+
+    <!-- Shortcuts Container -->
+    <div class="shortcuts-wrapper">
+      <div class="shortcuts-grid" id="shortcuts-grid">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <div class="perf-widget">
+      <div class="perf-badge">
+        <div class="pulse-dot"></div>
+        <span>Chromium 64-bit Core</span>
+      </div>
+      <span>•</span>
+      <span>Менеджер паролей активен</span>
+      <span>•</span>
+      <span>Zero-Copy GPU</span>
+    </div>
+
+    <!-- Changelog Section -->
+    <div class="changelog-wrapper" id="changelog-wrapper">
+      <div class="changelog-header">
+        <div class="changelog-header-title">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          <span>История обновлений (Changelog)</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="changelog-badge-latest">v1.15.0 • Новейшая</span>
+          <button type="button" class="btn-hide-changelog" id="btn-hide-changelog-header" title="Скрыть блок истории обновлений">
+            <span>Скрыть</span>
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="changelog-card">
+        <!-- Version 1.15.0 (Current) -->
+        <div class="version-block">
+          <div class="version-header">
+            <div class="version-title-group">
+              <span class="version-pill">v1.15.0</span>
+              <span class="version-name">🎨 Кастомизация фона в стиле Wallpaper Engine, глобальная неоновая палитра и универсальный PiP</span>
+            </div>
+            <span class="version-date">17 Ноября 2026</span>
+          </div>
+          <ul class="version-items-list">
+            <li class="version-item">
+              <span class="version-item-icon">🖼️</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-purple">Wallpaper Engine UI</span>
+                <strong>Кастомный фон главной страницы:</strong> загрузка любых обоев (PNG, JPG, WEBP, GIF, BMP) с инструментами позиционирования точь-в-точь как в Wallpaper Engine — ползунки смещения по горизонтали и вертикали (0–100%), зум (50–250%), горизонтальное отражение и 5 режимов выравнивания (Свободный, Заполнить, Вместить, Растянуть, Замостить).
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">⚡</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-blue">Neon Engine</span>
+                <strong>Глобальная палитра неона во всём браузере:</strong> 8 киберпанк/OLED пресетов (Фиолетовый, Циан, Матрица, Рубин, Сакура, Янтарь, Электрик блю, Кибер золото) + свободный Color Picker. Цвет подсветки мгновенно применяется на вкладках, обводках, кнопках и окне мини-плеера.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🎬</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-green">Universal PiP</span>
+                <strong>Плавающий мини-плеер на всех платформах:</strong> аккуратная неоновая кнопка «Картинка в картинке» теперь активна не только на YouTube, но и на Twitch, Rutube, VK Видео, Кинопоиске и Дзене.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🌑</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-orange">Dimming & Blur</span>
+                <strong>Затенение и кинематографичное размытие:</strong> регулировка оверлея затемнения (0–90%) и размытия (0–20px) на новой вкладке для идеального контраста часов, поиска и быстрых закладок.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🛠️</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-purple">Settings Polish</span>
+                <strong>Просторные настройки 820px:</strong> вкладки «Горячие клавиши» и «Очистка данных» теперь влезают целиком без сокращений, а иконка и текст Shield выровнены пиксель-в-пиксель.
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Version 1.14.0 -->
+        <div class="version-block">
+          <div class="version-header">
+            <div class="version-title-group">
+              <span class="version-pill">v1.14.0</span>
+              <span class="version-name">🚀 Автообновления в 1 клик, перенос вкладок между окнами, интеграция с GitHub и адаптивные настройки</span>
+            </div>
+            <span class="version-date">8 Ноября 2026</span>
+          </div>
+          <ul class="version-items-list">
+            <li class="version-item">
+              <span class="version-item-icon">🔄</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-purple">Auto-Updates</span>
+                <strong>Автоматическое отслеживание обновлений:</strong> браузер сам проверяет новые версии в фоне и при запуске, отображает стильное киберпанк-уведомление с ченджлогом релиза, полосой прогресса скачивания в реальном времени и устанавливает свежую версию в один клик. В настройки добавлена отдельная вкладка «Обновления» с возможностью ручной проверки.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🪟</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-blue">Tab Dragging</span>
+                <strong>Бесшовный перенос вкладок между окнами:</strong> теперь любую вкладку (YouTube, соцсети, документы) можно свободно перетаскивать между разными открытыми окнами браузера — вкладка плавно переносится без открытия лишних окон-дубликатов и с полным сохранением истории навигации.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🐙</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-green">GitHub Integration</span>
+                <strong>Официальный репозиторий на GitHub:</strong> добавлена быстрая кнопка перехода «мы теперь на GitHub!» на стартовой странице и в окне настроек.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">⚙️</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-orange">Settings UI</span>
+                <strong>Компактная навигация в настройках:</strong> переработаны вкладки панели настроек — все 5 разделов идеально помещаются в одну аккуратную строку на любых мониторах и уровнях DPI-масштабирования. Устранён баг с перекрытием переключателя автоматической проверки.
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Version 1.13.3 -->
+        <div class="version-block">
+          <div class="version-header">
+            <div class="version-title-group">
+              <span class="version-pill">v1.13.3</span>
+              <span class="version-name">🎮 Игровой режим (Game Booster), 0-CPU фоновая музыка, фикс заставок Rutube и зона перетягивания окна</span>
+            </div>
+            <span class="version-date">2 Ноября 2026</span>
+          </div>
+          <ul class="version-items-list">
+            <li class="version-item">
+              <span class="version-item-icon">🎮</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-purple">Game Booster</span>
+                <strong>Игровой режим и приоритет CPU:</strong> браузер автоматически снижает приоритет своих процессов до фонового при потере фокуса или сворачивании, отдавая 100% ресурсов процессора и видеокарты играм (Dota 2, CS2 и др.), пока в фоне играет музыка или видео.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">⚡</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-blue">0-CPU Audio</span>
+                <strong>Устранение просадок FPS при музыке в фоне:</strong> ликвидированы микросекундные таймеры пересчета геометрии страницы. Воспроизведение фонового аудио потребляет 0% CPU, а фоновые Canvas/CSS-анимации визуализаторов замораживаются.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🎬</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-green">Rutube & Players</span>
+                <strong>Фикс заставок в видеоплеерах:</strong> исправлена проблема зацикливания и зависания кнопки «Пропустить заставку» на Rutube. Кнопки заставок защищены от ложных срабатываний автопропуска рекламы и спам-кликов.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🖱️</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-orange">Window Drag Spacer</span>
+                <strong>Зона перетягивания окна:</strong> в правом верхнем углу панели вкладок выделено постоянное свободное пространство шириной 44px — окно теперь удобно перетаскивать по рабочему столу даже при десятках открытых вкладок.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">⚙️</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-pink">Старт браузера</span>
+                <strong>Новая опция «Открывать новую вкладку»:</strong> при старте браузер мгновенно активирует существующую новую вкладку среди сохраненных либо открывает свежую поверх сессии.
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Version 1.13.0 -->
+        <div class="version-block">
+          <div class="version-header">
+            <div class="version-title-group">
+              <span class="version-pill">v1.13.0</span>
+              <span class="version-name">⚡ Полноэкранная история и загрузки (Ctrl+H / Ctrl+J), 0-Lag виртуализация, Smart VirusTotal и универсальный Drag-and-Drop</span>
+            </div>
+            <span class="version-date">8 Октября 2026</span>
+          </div>
+          <ul class="version-items-list">
+            <li class="version-item">
+              <span class="version-item-icon">📑</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-purple">Полноэкранные вкладки</span>
+                <strong>Полноценные страницы Истории и Загрузок:</strong> по нажатию на <code>Ctrl+H</code> и <code>Ctrl+J</code> открываются отдельные выделенные вкладки (<code>eclipse://history</code> и <code>eclipse://downloads</code>) в стильном темном дизайне с моментальным поиском и фильтрацией.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🚀</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-blue">0-Lag Virtualization</span>
+                <strong>Ультра-быстрый рендеринг без лагов:</strong> страницы истории и загрузок переведены на виртуальную чанковую подгрузку (по 50 элементов) с аппаратной изоляцией и дебаунсом — мгновенная отзывчивость даже при десятках тысяч записей.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🎯</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-green">Universal Drag & Drop</span>
+                <strong>Перетаскивание файлов в любые приложения:</strong> скачанные файлы теперь можно перетаскивать напрямую из браузера не только в проводник и мессенджеры, но и в профессиональный софт (CapCut, Premiere Pro, Photoshop и др.) без срывов.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🛡️</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-orange">Smart VirusTotal</span>
+                <strong>Интерактивный виджет проверки безопасности:</strong> убрана громоздкая кнопка на карточках скачивания — теперь при завершении загрузки снизу плавно появляется стильный компактный тост с предложением проверить файл в VirusTotal в один клик.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🛒</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-pink">Chrome Web Store</span>
+                <strong>Очистка интерфейса магазина расширений:</strong> навсегда ликвидированы красные плашки ошибок и кнопка «Открыть руководство» — магазин расширений Google выглядит безупречно и работает со 100% совместимостью.
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Version 1.12.1 -->
+        <div class="version-block">
+          <div class="version-header">
+            <div class="version-title-group">
+              <span class="version-pill past">v1.12.1</span>
+              <span class="version-name">🎛️ Интерактивный ползунок регулировки силы затемнения страниц (Range Slider UI)</span>
+            </div>
+            <span class="version-date">8 Октября 2026</span>
+          </div>
+          <ul class="version-items-list">
+            <li class="version-item">
+              <span class="version-item-icon">🎚️</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-purple">Плавный слайдер</span>
+                <strong>Регулировка силы затемнения от 0% до 100%:</strong> селектор с фиксированными опциями заменён на плавный неоновый ползунок. Настройте точный комфортный уровень затенения фона с шагом в 1%.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">⚡</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-blue">Живой бейдж</span>
+                <strong>Мгновенная индикация процентов:</strong> динамический бейдж в реальном времени отображает точное значение при перемещении ползунка.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">👁️</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-green">Интеллектуальный UX</span>
+                <strong>Адаптивное состояние:</strong> при отключении функции затемнения тумблером слайдер автоматически становится полупрозрачным и блокируется от случайных изменений.
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Version 1.12.0 -->
+        <div class="version-block">
+          <div class="version-header">
+            <div class="version-title-group">
+              <span class="version-pill past">v1.12.0</span>
+              <span class="version-name">🌟 Плавающие панели загрузок и истории, видимость страниц & Настройки затемнения</span>
+            </div>
+            <span class="version-date">8 Октября 2026</span>
+          </div>
+          <ul class="version-items-list">
+            <li class="version-item">
+              <span class="version-item-icon">🪟</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-purple">Floating Windows</span>
+                <strong>Устранение чёрного экрана при открытии панелей:</strong> веб-страницы больше не скрываются и не становятся чёрными при вызове загрузок или истории. Панели открываются как независимые аппаратные всплывающие окна Chromium над активной страницей.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🌗</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-blue">Настройки затемнения</span>
+                <strong>Управление затемнением экрана (Page Dimming):</strong> в «Настройки» -&gt; «Интерфейс» добавлены опции включения/отключения фонового затемнения страниц и выбор прозрачности (0%, 15%, 35%, 55%, 75%).
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">📜</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-green">История сайтов</span>
+                <strong>Chrome-Style History Bubble:</strong> миниатюрная плавающая панель недавней истории сайтов с живым поиском, фавиконами, удалением записей в один клик и быстрым переходом к полному журналу (<code>Ctrl+H</code>).
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🖱️</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-orange">Drag-and-Drop</span>
+                <strong>Перетаскивание файлов & Системные иконки:</strong> скачанные файлы можно перетаскивать мышью прямо из панели загрузок на Рабочий стол или в мессенджеры с отображением подлинных иконок Windows.
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Version 1.11.1 -->
+        <div class="version-block">
+          <div class="version-header">
+            <div class="version-title-group">
+              <span class="version-pill past">v1.11.1</span>
+              <span class="version-name">🛡️ Исправление отображения панели загрузок поверх страниц & Синхронизация слоёв</span>
+            </div>
+            <span class="version-date">8 Октября 2026</span>
+          </div>
+          <ul class="version-items-list">
+            <li class="version-item">
+              <span class="version-item-icon">🪟</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-purple">WebContentsView Fix</span>
+                <strong>Устранение перекрытия панели веб-страницей:</strong> решена проблема наложения нативного слоя Chromium над элементами интерфейса. Всплывающее окно загрузок теперь гарантированно отображается поверх любых открытых сайтов (YouTube, Gamma, онлайн-кинотеатры).
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">⚡</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-green">Интерактивность</span>
+                <strong>Мгновенное закрытие и возврат к странице:</strong> клик в любую точку за пределами панели или нажатие <code>Escape</code> мгновенно сворачивают баббл и возвращают фокус на веб-страницу.
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Version 1.11.0 -->
+        <div class="version-block">
+          <div class="version-header">
+            <div class="version-title-group">
+              <span class="version-pill past">v1.11.0</span>
+              <span class="version-name">📥 Миниатюрная панель загрузок (Chrome Bubble), Drag-and-Drop & Нативные иконки файлов</span>
+            </div>
+            <span class="version-date">8 Октября 2026</span>
+          </div>
+          <ul class="version-items-list">
+            <li class="version-item">
+              <span class="version-item-icon">🖱️</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-purple">Drag-and-Drop</span>
+                <strong>Перетягивание ярлыка файла из загрузок:</strong> скачанные файлы теперь можно перетаскивать напрямую из всплывающей панели или окна загрузок на Рабочий стол Windows, в папки Проводника, Telegram, Discord, графические редакторы и любые другие программы.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🫧</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-blue">Chrome Bubble UI</span>
+                <strong>Компактная миниатюрная панель в стиле Google Chrome:</strong> аккуратный всплывающий баббл в правом верхнем углу с индикатором загрузки, мгновенным доступом к недавним файлам, кнопками «Показать все» и «Очистить список», а также автоматическим показом при старте новой загрузки.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🖼️</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-green">Нативные иконки</span>
+                <strong>Отображение системных иконок файлов:</strong> интеграция с нативным API Windows (<code>app.getFileIcon</code>) для извлечения подлинных иконок программ (.exe, .msi), документов, медиа и архивов с умным кэшированием и мгновенным fallback-рендерингом.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🔔</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-orange">Индикация</span>
+                <strong>Живой бейдж активных загрузок:</strong> пульсирующий неоновый индикатор на кнопке загрузок панели инструментов, показывающий количество и статус текущих скачиваний в реальном времени.
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Version 1.10.2 -->
+        <div class="version-block">
+          <div class="version-header">
+            <div class="version-title-group">
+              <span class="version-pill past">v1.10.2</span>
+              <span class="version-name">🛒 Полная совместимость с Интернет-магазином Chrome & Фикс «Продукты недоступны»</span>
+            </div>
+            <span class="version-date">6 Октября 2026</span>
+          </div>
+          <ul class="version-items-list">
+            <li class="version-item">
+              <span class="version-item-icon">⚡</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-purple">Web Store API</span>
+                <strong>Устранение ошибки «Продукты недоступны»:</strong> внедрена асинхронная поддержка Promises и Callbacks для всех методов <code>chrome.webstorePrivate</code> (<code>getExtensionStatus</code>, <code>beginInstallWithManifest3</code>, <code>install</code>, <code>getWebGLStatus</code>). Google Lit элементы магазина теперь мгновенно распознают браузер.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🛡️</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-green">Client Hints</span>
+                <strong>Подлинная эмуляция <code>navigator.userAgentData</code>:</strong> реализован аутентичный профиль брендов Google Chrome 130 Windows 64-bit с методами <code>getHighEntropyValues</code> и <code>toJSON</code>.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🧩</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-blue">1-Click Установка</span>
+                <strong>Умный MutationObserver и кнопка установки:</strong> непрерывное скрытие ошибочных баннеров и добавление стильной кнопки <em>«⚡ Установить в Black Hole»</em> на страницах расширений с авто-распаковкой и полифиллами.
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Version 1.10.1 -->
+        <div class="version-block">
+          <div class="version-header">
+            <div class="version-title-group">
+              <span class="version-pill past">v1.10.1</span>
+              <span class="version-name">⚡ Исправление крашей на Gamma.app & Оптимизация WebGL, Canvas и XHR/Fetch</span>
+            </div>
+            <span class="version-date">2 Октября 2026</span>
+          </div>
+          <ul class="version-items-list">
+            <li class="version-item">
+              <span class="version-item-icon">🛠️</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-purple">XHR & Сеть</span>
+                <strong>Устранение сбоя XHR/Fetch:</strong> исправлена ошибка области видимости в сетевом интерцепторе предзагрузки, приводившая к сбою клиентских библиотек авторизации и скриптов (Clerk, Next.js, Sentry).
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🎮</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-green">GPU & WebGL</span>
+                <strong>Стабилизация рендеринга Canvas и WebGL:</strong> оптимизированы параметры графического конвейера Chromium, предотвращены сбои видеодрайвера при инициализации сложных шейдеров и интерактивных холстов (Gamma.app, Figma, Canva).
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🛡️</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-blue">Crash Resilience</span>
+                <strong>Мягкое авто-восстановление вкладок:</strong> добавлен системный перехватчик аварийного завершения процессов отрисовки (<code>render-process-gone</code>) с мгновенным авто-восстановлением страницы без падения браузера.
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Version 1.10.0 -->
+        <div class="version-block">
+          <div class="version-header">
+            <div class="version-title-group">
+              <span class="version-pill past">v1.10.0</span>
+              <span class="version-name">🪟 Открытие вкладок в отдельных окнах, Tear-off Drag & Новое окно (Ctrl+N)</span>
+            </div>
+            <span class="version-date">2 Октября 2026</span>
+          </div>
+          <ul class="version-items-list">
+            <li class="version-item">
+              <span class="version-item-icon">🪟</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-purple">Отдельные окна</span>
+                <strong>Полноценная многооконность (Multi-Window):</strong> вкладки теперь можно открывать и переносить в отдельные независимые окна браузера через контекстное меню (<em>«🪟 Открыть вкладку в отдельном окне»</em> и <em>«🪟 Открыть копию в новом окне»</em>).
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🖐️</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-blue">Tear-Off Жест</span>
+                <strong>Отрыв вкладки перетаскиванием (Tab Tear-Off):</strong> потяните любую вкладку мышью вниз или за пределы верхней панели — вкладка моментально отделится в самостоятельное окно в месте отпускания курсора!
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🔗</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-cyan">Ссылки на сайтах</span>
+                <strong>«Открыть ссылку в новом окне»:</strong> в контекстное меню ссылок на веб-страницах добавлена возможность открывать ссылки в отдельном окне браузера в один клик.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">⚡</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-green">Инструменты & Хоткей</span>
+                <strong>Кнопка и горячая клавиша Нового окна:</strong> добавлена кнопка <code>🪟 Новое окно</code> в верхней панели инструментов и глобальное сочетание клавиш <code>Ctrl+N</code>.
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Version 1.9.2 -->
+        <div class="version-block">
+          <div class="version-header">
+            <div class="version-title-group">
+              <span class="version-pill past">v1.9.2</span>
+              <span class="version-name">📥 Исправление имён и иконок файлов в Загрузках & Фикс геометрии переключателей</span>
+            </div>
+            <span class="version-date">2 Октября 2026</span>
+          </div>
+          <ul class="version-items-list">
+            <li class="version-item">
+              <span class="version-item-icon">📥</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-purple">Менеджер загрузок</span>
+                <strong>Авто-распознавание и восстановление имен файлов:</strong> устранена ошибка «Без названия» в журнале загрузок. Внедрено многоуровневое извлечение реальных имен из заголовков, пути сохранения (<code>savePath</code>) и URL.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">📦</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-blue">Иконки форматов</span>
+                <strong>Точные иконки по расширениям:</strong> архивы (📦), программы и инсталляторы (⚡), картинки (🖼️), видео (🎬), аудио (🎵), документы (📄), расширения (🧩) и код (📜). Папочная иконка больше не отображается для файлов.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🎛️</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-green">Интерфейс</span>
+                <strong>Идеальная геометрия тумблеров:</strong> устранено смещение кноба и вылезание за правый край подложки. Настройки защищены от сдавливания flex-контейнером (<code>flex-shrink: 0</code>).
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Version 1.9.1 -->
+        <div class="version-block">
+          <div class="version-header">
+            <div class="version-title-group">
+              <span class="version-pill past">v1.9.1</span>
+              <span class="version-name">🌓 Темы оформления, Совместимость с Dark Reader, Вход в Riot Games, Кастомизатор горячих клавиш & Загрузки</span>
+            </div>
+            <span class="version-date">1 Октября 2026</span>
+          </div>
+          <ul class="version-items-list">
+            <li class="version-item">
+              <span class="version-item-icon">🌓</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-blue">Dark Reader & Сайты</span>
+                <strong>Отключение адаптивной тёмной темы для сайтов:</strong> в Настройки добавлена функция раздельного управления тёмной темой для веб-страниц. При её отключении сайты получают стандартный светлый базовый слой (<code>prefers-color-scheme: light</code>), обеспечивая идеальную работу расширения <strong>Dark Reader</strong> без конфликтов стилей, искажений контраста и двойного затемнения.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🎮</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-purple">Riot Games & OAuth</span>
+                <strong>Нативный вход в Riot Games (League of Legends, Valorant):</strong> устранена ошибка авторизации через Google. Внедрена нативная обработка системных URI-схем (<code>riotclient://</code>, <code>leagueoflegends://</code>, <code>steam://</code>, <code>discord://</code>, <code>tg://</code>), мгновенно передающая токен входа обратно в установленный игровой клиент. В доверенный список добавлены домены безопасности Arkose Labs и DataDome.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🖼️</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-blue">Аниме-постеры</span>
+                <strong>Исправление картинок и превью (YummyAnime, Shikimori, AnimeGO):</strong> устранена проблема с битыми постерами аниме. Исправлены DOM-селекторы очистки рекламы и внедрена защита статических изображений (<code>.webp</code>, <code>.jpg</code>, <code>.png</code>, <code>.avif</code>) от ложных срабатываний фильтра.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🛒</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-green">Маркетплейсы</span>
+                <strong>Полная совместимость с GGSEL и защищенными магазинами:</strong> домены <code>ggsel.net</code> и <code>ggsel.com</code> внесены в белый список для бесперебойного доступа к каталогам и покупкам.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🎛️</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-purple">Горячие клавиши</span>
+                <strong>Полноценный кастомизатор горячих клавиш (Shortcuts Manager):</strong> выделенная вкладка в Настройках браузера со всеми функциями (вкладки, окна, навигация, масштаб, закладки, пароли, Shield, PiP, DevTools), удобными категориями («Все», «Вкладки», «Навигация», «Инструменты») и мгновенным поиском.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🔘</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-green">Тумблеры вкл/выкл</span>
+                <strong>Индивидуальное отключение комбинаций:</strong> рядом с каждой функцией добавлен тумблер (toggle switch). Выключенная горячая клавиша полностью деактивируется на уровне ядра браузера и страниц, исключая случайные нажатия.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🎯</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-blue">Интерактивный захват</span>
+                <strong>Запись комбинаций в один клик:</strong> нажмите на бейдж клавиши и зажмите желаемое сочетание на клавиатуре (Ctrl, Alt, Shift + клавиша, F1-F12). 100% совместимость с русской и английской раскладками. Кнопка сброса (↺) для каждого действия и общий сброс.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">📥</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-purple">Загрузки</span>
+                <strong>Встроенный менеджер и журнал загрузок (Ctrl+J):</strong> новая кнопка на панели инструментов и модальное окно истории загрузок. Отслеживание прогресса скачивания в реальном времени, запуск файлов, открытие в папке («Показать в папке»), системная кнопка «📂 Папка загрузок» и поиск.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🌐</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-green">Google сервисы</span>
+                <strong>Стабильная связь с сервисами Google (Docs, Drive, Sheets, Translate):</strong> устранена ошибка «Нет соединения с интернетом» и сбои синхронизации. Восстановлена целостность защищённых протоколов TLS / HTTP2 WebChannel и системного сетевого монитора Chromium.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">📷</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-blue">Перевод по фото</span>
+                <strong>Мгновенный перевод картинок (Google Lens & Яндекс Переводчик):</strong> устранена проблема с бесконечной загрузкой при переводе по фото. Исправлена передача бинарных данных формы и внедрен прямой Fast Pass-through для запросов распознавания изображений (OCR).
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🛡️</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-purple">Яндекс Директ & РСЯ</span>
+                <strong>Тотальное вырезание рекламы Яндекс Директ и AdFox:</strong> внедрены глубокие системные заглушки для скриптов Ya.Context.AdvManager, Ya.adfoxCode, Ya.Direct и yaContextCb, расширена база сетевой фильтрации (an.yandex.ru, yabs.yandex.ru, adfox.ru, context.js), полностью удалены боковые баннеры в Яндекс Переводчике и блоки «РЕКЛАМА • 16+».
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🎮</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-purple">Игровой режим & Сеть</span>
+                <strong>Zero-Packet-Loss Gaming Engine (Dota 2, CS2, Valorant):</strong> устранение потерь пакетов и скачков пинга в онлайн-играх при запущенном браузере. Полное отключение UDP QUIC-флуда (`--disable-quic`), подавление фонового сканирования локальной сети mDNS/SSDP (`MediaRouter`), отключение спекулятивных сетевых запросов на старте и энергосберегающий троттлинг фоновых таймеров.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">⚡</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-green">WAF & Антибот-защита</span>
+                <strong>Полный обход WAF и антибот-проверок (DNS-Shop, Qrator, Variti, VChecks):</strong> устранена ошибка «403 Error Forbidden» на сайтах DNS-Shop и интернет-магазинах. Внедрена нативная маскировка (эмуляция 5 плагинов Chrome `navigator.plugins`, `mimeTypes`, скрытие `navigator.webdriver`, подлинные `window.chrome` и `navigator.languages`, защита нативного кода `[native code]` для всех системных вызовов).
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🎨</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-blue">Отображение страниц</span>
+                <strong>Исправление цветовой гаммы веб-сайтов:</strong> устранен графический артефакт двухцветного фона на сайтах Google. Текст больше не сливается с фоном, страницы отображаются чисто и контрастно.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">🌌</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-purple">Центрирование</span>
+                <strong>Интеллектуальное центрирование экрана:</strong> при скрытии ченджлога (кнопкой в левом нижнем углу или в шапке) блок часов, поиска и ярлыков автоматически и плавно центрируется ровно посередине экрана.
+              </div>
+            </li>
+            <li class="version-item">
+              <span class="version-item-icon">⚙️</span>
+              <div class="version-item-content">
+                <span class="version-tag tag-green">Интерфейс & Настройки</span>
+                <strong>Выравнивание в один ряд и модульные вкладки:</strong> все бейджи горячих клавиш и тумблеры выровнены строго по одной линии. Настройки разделены на вкладки «Основные», «Горячие клавиши», «Блокировщик Shield» и «Очистка данных».
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Collapsible Older Versions Container -->
+        <div id="older-versions" style="display: none; flex-direction: column; gap: 20px;">
+          <!-- Version 1.8.3 -->
+          <div class="version-block">
+            <div class="version-header">
+              <div class="version-title-group">
+                <span class="version-pill past">v1.8.3</span>
+                <span class="version-name">🛡️ Deep Video Ad-Destroyer (Тотальное вырезание видеорекламы под корень)</span>
+              </div>
+              <span class="version-date">26 Сентября 2026</span>
+            </div>
+            <ul class="version-items-list">
+              <li class="version-item">
+                <span class="version-item-icon">✂️</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-purple">Root-Level Excision</span>
+                  <strong>Вырезание рекламы под корень (uBO json-prune):</strong> рекурсивный перехватчик на уровне <code>JSON.parse</code> вычищает объекты <code>ad_config</code>, <code>ads</code>, <code>preroll</code>, <code>midroll</code>, <code>postroll</code>, <code>ad_sections</code> и <code>video_ads</code> до инициализации плеера. Плеер определяет, что реклама отсутствует, и сразу запускает основное видео с 0-й секунды без первого кадра рекламы и таймеров!
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">📡</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-green">VAST / VPAID No-Op</span>
+                  <strong>Сетевой редирект VAST/JSON (noopvast / noopjson):</strong> все сетевые запросы к рекламным биржам и эндпоинтам мгновенно перенаправляются на валидные пустые XML-заглушки <code>&lt;VAST version="3.0"&gt;&lt;/VAST&gt;</code> и JSON <code>{ has_ads: false }</code>, предотвращая ошибки таймаута и зависания плееров.
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">🛡️</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-purple">VK Видео & PlayerJS</span>
+                  <strong>VK Video & PlayerJS Defuser:</strong> прямой перехват сетевых AJAX/Fetch запросов к <code>al_video.php?act=get_video_ads</code>, дефьюзинг глобальных объектов <code>vk.videoAds</code>, <code>vk.preroll</code>, <code>vk.adman</code>, мок-стаб <code>window.VideoAds()</code> и автоклик по кнопкам пропуска.
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">🎬</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-blue">Аниме & Стриминг</span>
+                  <strong>Аниме-плееры (YummyAnime, Kodik, Alloha, VideoCDN, Sibnet, Voidboost):</strong> нейтрализация рекламных конфигураций (<code>window.adv = false</code>), мок-стаб Google IMA SDK (<code>window.google.ima</code>), автопропуск оверлеев и 50мс сканер резервной нейтрализации рекламы.
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">⚡</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-blue">Ядро Chromium</span>
+                  <strong>Сквозная инъекция во все фреймы (All-Frames Injection):</strong> защитный движок и стили принудительно внедряются в каждый вложенный <code>&lt;iframe&gt;</code> через <code>WebFrameMain</code> на уровне ядра Electron, устраняя архитектурные ограничения сторонних расширений (uBlock/AdGuard).
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">🚫</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-orange">Click-Trap Guard</span>
+                  <strong>Подавление клик-ловушек и Popunder-оверлеев:</strong> нейтрализация невидимых ссылок и прозрачных слоев поверх кнопок воспроизведения с блокировкой казино, 1xBet и спам-редиректов.
+                </div>
+              </li>
+            </ul>
+          </div>
+          <!-- Version 1.8.2 -->
+          <div class="version-block">
+            <div class="version-header">
+              <div class="version-title-group">
+                <span class="version-pill past">v1.8.2</span>
+                <span class="version-name">🕶️ Режим инкогнито, Авторизация Google & Скоростной запуск</span>
+              </div>
+              <span class="version-date">26 Сентября 2026</span>
+            </div>
+            <ul class="version-items-list">
+              <li class="version-item">
+                <span class="version-item-icon">🕶️</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-purple">Приватность</span>
+                  <strong>Режим инкогнито и безопасный сёрфинг (Incognito Mode):</strong> изолированный RAM-раздел <code>session.fromPartition('incognito')</code> без записи данных на диск. Нулевое сохранение истории просмотров, отключение сохранения/автозаполнения паролей, мгновенное удаление куки и кэша при закрытии окна.
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">🌌</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-blue">Интерфейс</span>
+                  <strong>Стартовая страница <code>eclipse://incognito</code>:</strong> стильный OLED киберпанк дизайн, приватный поиск (DuckDuckGo, Startpage, Google, Яндекс), карточки защиты и ссылки быстрого доступа.
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">⌨️</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-purple">Управление</span>
+                  <strong>Горячие клавиши и контекстное меню:</strong> сочетание <code>Ctrl+Shift+N</code> (и русская раскладка <code>Ctrl+Shift+Т</code>), кнопка 🕶️ на панели, пункт «🕶️ Открыть ссылку в окне инкогнито» в контекстном меню ссылок и фиолетовый бейдж инкогнито.
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">🔑</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-green">Совместимость</span>
+                  <strong>100% Авторизация в Google Аккаунтах:</strong> динамическая подмена User-Agent и удаление Client Hints на страницах Google OAuth, полностью устраняющая ошибку «Браузер может быть не безопасным».
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">⚡</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-orange">Установщик</span>
+                  <strong>Мгновенный запуск инсталлятора:</strong> переход на высокоскоростной алгоритм компрессии <code>lzma2/fast</code>, ускоривший запуск и распаковку установщика в несколько раз.
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div class="version-block">
+            <div class="version-header">
+              <div class="version-title-group">
+                <span class="version-pill past">v1.8.1</span>
+                <span class="version-name">🚀 Стабильность YouTube, Popup Flood Guard & Видеофон</span>
+              </div>
+              <span class="version-date">25 Сентября 2026</span>
+            </div>
+            <ul class="version-items-list">
+              <li class="version-item">
+                <span class="version-item-icon">🚀</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-red">YouTube Fix</span>
+                  <strong>Устранение бесконечного открытия вкладок:</strong> переработан алгоритм пропуска рекламы без слепых синтетических кликов по DOM, дебаунс MutationObserver и прямое управление видео.
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">🛡️</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-purple">Защита</span>
+                  <strong>Popup Flood Guard:</strong> защита от шторма всплывающих окон (лимит до 3 вкладок за 2 секунды) и фильтрация мусорных редиректов.
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">🧹</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-green">Очистка</span>
+                  <strong>Чистый минималистичный интерфейс:</strong> удаление мини-аудиоплеера из шапки для максимальной легкости и быстродействия.
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Version 1.8.0 -->
+          <div class="version-block">
+            <div class="version-header">
+              <div class="version-title-group">
+                <span class="version-pill past">v1.8.0</span>
+                <span class="version-name">🛡️ Black hole Shield, Медиа-меню ПКМ, автопропуск рекламы & OLED Turbo</span>
+              </div>
+              <span class="version-date">22 Сентября 2026</span>
+            </div>
+            <ul class="version-items-list">
+              <li class="version-item">
+                <span class="version-item-icon">🛡️</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-purple">Защита</span>
+                  <strong>Встроенный блокировщик рекламы (Black hole Shield):</strong> прямая сетевая фильтрация баннеров, трекеров и промо-сетей без сторонних расширений. Кнопка 🛡️ в Omnibox с живым счетчиком и окном быстрого управления белым списком.
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">🎬</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-green">Видео & Аниме</span>
+                  <strong>Универсальный автопропуск рекламы (Kodik, Alloha, VideoCDN, YouTube):</strong> мгновенная перемотка прероллов/мидроллов в конец, автоклик по кнопкам «Пропустить» / «Skip», нейтрализация анти-адблока и подавление всплывающих окон (popunder).
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">🖼️</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-blue">Медиа ПКМ</span>
+                  <strong>Умное контекстное меню для изображений и видео:</strong> выбор наилучшего разрешения, конвертация на лету (PNG, JPEG, WebP), апскейл 2x/4x Ultra HD и пакетное скачивание всех картинок со страницы.
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">📺</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-orange">YouTube</span>
+                  <strong>Фикс комментариев, Theater Mode & Zero-Flash:</strong> устранение бага скролла и сброса фокуса при лайках на комментарии, автозапуск в широком формате и устранение белой вспышки.
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">⚡</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-green">Производительность</span>
+                  <strong>Turbo-Core & Асинхронное сохранение:</strong> неблокирующее дебаунс-сохранение сессий, Zero-Copy GPU пайплайн, аппаратное декодирование медиа и защита от утечек памяти.
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div class="version-block">
+            <div class="version-header">
+              <div class="version-title-group">
+                <span class="version-pill past">v1.7.0</span>
+                <span class="version-name">Управление расширениями & Полноэкранный плеер</span>
+              </div>
+              <span class="version-date">Сентябрь 2026</span>
+            </div>
+            <ul class="version-items-list">
+              <li class="version-item">
+                <span class="version-item-icon">🧩</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-purple">Расширения</span>
+                  <strong>Менеджер управления расширениями:</strong> полноразмерное модальное окно с живым поиском, переключателями активности, кнопкой настроек (<code>⚙️ Параметры</code>) и красной кнопкой полного удаления (<code>🗑️ Удалить</code>) с физической очисткой файлов с диска.
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">📌</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-purple">Панель</span>
+                  <strong>Закрепление на панели:</strong> возможность закреплять и откреплять иконки расширений на верхней панели инструментов для быстрого доступа в 1 клик.
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">🖱️</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-purple">Меню</span>
+                  <strong>Контекстное меню расширений по ПКМ:</strong> быстрый вызов параметров, закрепления/открепления и удаления прямо со значка на верхней панели.
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">🖥️</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-blue">Видео</span>
+                  <strong>Настоящий полноэкранный режим (Borderless Fullscreen):</strong> видео в YouTube, Twitch, VK Видео, Rutube разворачиваются на 100% площади экрана со скрытием панели вкладок.
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Version 1.6.0 -->
+          <div class="version-block">
+            <div class="version-header">
+              <div class="version-title-group">
+                <span class="version-pill past">v1.6.0</span>
+                <span class="version-name">Браузер по умолчанию & Совместимость Manifest V3</span>
+              </div>
+              <span class="version-date">Сентябрь 2026</span>
+            </div>
+            <ul class="version-items-list">
+              <li class="version-item">
+                <span class="version-item-icon">🌐</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-green">Система</span>
+                  <strong>Браузер по умолчанию в Windows:</strong> назначение Black hole Browser основным браузером для протоколов HTTP/HTTPS, файлов <code>.html</code>, <code>.pdf</code> и перехвата внешних ссылок из приложений.
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">🛠️</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-purple">Совместимость</span>
+                  <strong>Универсальный движок Manifest V3:</strong> полная поддержка сложных расширений (<strong>Steam Inventory Helper</strong>, <strong>uBlock Origin Lite</strong>) через автоматический полифилл <code>chrome.storage.sync</code>, <code>chrome.permissions</code> и Service Worker.
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">📺</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-blue">Медиа</span>
+                  <strong>Режим «Картинка в картинке» (Picture-in-Picture):</strong> плавающая кнопка над любым видеоплеером, пункт в контекстном меню вкладки и глобальная горячая клавиша <code>Alt+P</code> / <code>Alt+З</code>.
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Version 1.5.0 -->
+          <div class="version-block">
+            <div class="version-header">
+              <div class="version-title-group">
+                <span class="version-pill past">v1.5.0</span>
+                <span class="version-name">Drag-and-Drop, Восстановление вкладок & Папки</span>
+              </div>
+              <span class="version-date">Сентябрь 2026</span>
+            </div>
+            <ul class="version-items-list">
+              <li class="version-item">
+                <span class="version-item-icon">🔄</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-orange">Вкладки</span>
+                  <strong>Перетаскивание вкладок и папок (Drag & Drop):</strong> свободное изменение порядка вкладок, перенос целых папок мышью и добавление/извлечение вкладок из папок с неоновыми маркерами.
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">↩️</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-orange">История</span>
+                  <strong>Восстановление закрытых вкладок (Ctrl+Shift+T):</strong> открытие закрытых вкладок в любой раскладке клавиатуры с сохранением стека между перезапусками браузера.
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">🎬</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-blue">YouTube</span>
+                  <strong>Автозапоминание широкого экрана YouTube:</strong> трёхуровневая фиксация режима кинотеатра (Theater Mode) для всех последующих роликов.
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">⏸️</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-blue">Медиа</span>
+                  <strong>Умная пауза YouTube:</strong> автоматическая пауза видео при старте браузера для предотвращения одновременного воспроизведения звука.
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">📁</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-orange">Папки</span>
+                  <strong>Папки и группы вкладок:</strong> группировка вкладок по папкам с 8 неоновыми цветами, сворачиванием в 1 клик и контекстным управлением.
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Version 1.4.0 -->
+          <div class="version-block">
+            <div class="version-header">
+              <div class="version-title-group">
+                <span class="version-pill past">v1.4.0</span>
+                <span class="version-name">Шорткаты, Менеджер паролей & Производительность</span>
+              </div>
+              <span class="version-date">Сентябрь 2026</span>
+            </div>
+            <ul class="version-items-list">
+              <li class="version-item">
+                <span class="version-item-icon">⚡</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-green">Интерфейс</span>
+                  <strong>Сетка быстрых ярлыков (Шорткаты):</strong> настраиваемая панель быстрого доступа на новой вкладке с добавлением, редактированием и удалением.
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">🗂️</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-orange">Вкладки</span>
+                  <strong>Вкладки фиксированного размера:</strong> строго одинаковая ширина вкладок (200px) с пропорциональным масштабированием и защитой от деформации.
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">🖱️</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-orange">Управление</span>
+                  <strong>Контекстное меню по ПКМ:</strong> закрепление, дублирование, отключение звука, закрытие вкладок справа/слева.
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">💤</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-green">Память</span>
+                  <strong>Гибернация вкладок (Memory Saver):</strong> выгрузка неактивных вкладок из RAM с подсчётом сэкономленной памяти.
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">🔑</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-green">Безопасность</span>
+                  <strong>Менеджер паролей и миграция:</strong> автосохранение, автозаполнение и импорт паролей из Chrome, Яндекс, Edge, Firefox, Bitwarden.
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">🧩</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-purple">Магазин</span>
+                  <strong>Нативная установка из Chrome Web Store:</strong> установка расширений напрямую с официального сайта Google.
+                </div>
+              </li>
+              <li class="version-item">
+                <span class="version-item-icon">🌌</span>
+                <div class="version-item-content">
+                  <span class="version-tag tag-purple">Дизайн</span>
+                  <strong>Глубокий OLED-интерфейс & Звёздное небо:</strong> космическая тёмная тема с мерцающими звёздами и фиолетовым неоном.
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <button type="button" class="changelog-expand-btn" id="btn-toggle-changelog">
+          <span id="changelog-btn-text">Показать все версии (v1.8.3, v1.8.2, v1.8.1, v1.8.0, v1.7.0...)</span>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Adding/Editing Shortcut -->
+  <div class="modal-backdrop" id="shortcut-modal">
+    <div class="modal-card">
+      <div class="modal-title" id="modal-title">⚡ Добавить ярлык</div>
+      <div class="modal-input-group">
+        <label class="modal-label" for="shortcut-name">Название сайта</label>
+        <input type="text" class="modal-input" id="shortcut-name" placeholder="например, YouTube" autocomplete="off">
+      </div>
+      <div class="modal-input-group">
+        <label class="modal-label" for="shortcut-url">Адрес (URL)</label>
+        <input type="text" class="modal-input" id="shortcut-url" placeholder="например, https://youtube.com" autocomplete="off">
+      </div>
+      <div class="modal-btn-row">
+        <button type="button" class="modal-btn modal-btn-cancel" id="btn-modal-cancel">Отмена</button>
+        <button type="button" class="modal-btn modal-btn-save" id="btn-modal-save">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const clockTimeEl = document.getElementById('clock-time');
+    const clockDateEl = document.getElementById('clock-date');
+    let lastTimeStr = '';
+    let lastDateStr = '';
+
+    function updateClock() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+      const dateStr = now.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
+      if (timeStr !== lastTimeStr && clockTimeEl) {
+        clockTimeEl.textContent = timeStr;
+        lastTimeStr = timeStr;
+      }
+      if (dateStr !== lastDateStr && clockDateEl) {
+        clockDateEl.textContent = dateStr;
+        lastDateStr = dateStr;
+      }
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    const searchForm = document.getElementById('search-form');
+    const searchInput = document.getElementById('search-query');
+    const engineSelect = document.getElementById('engine-select');
+
+    searchForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const q = searchInput.value.trim();
+      if (!q) return;
+
+      const engine = engineSelect.value;
+      const engines = {
+        google: 'https://www.google.com/search?q=',
+        yandex: 'https://ya.ru/search/?text=',
+        duckduckgo: 'https://duckduckgo.com/?q=',
+        bing: 'https://www.bing.com/search?q='
+      };
+
+      const isUrl = /^(https?:\/\/|file:\/\/)/i.test(q) || (/^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/.*)?$/i.test(q) && !q.includes(' '));
+      if (isUrl) {
+        window.location.href = /^[a-zA-Z]+:\/\//i.test(q) ? q : 'https://' + q;
+      } else {
+        window.location.href = (engines[engine] || engines.google) + encodeURIComponent(q);
+      }
+    });
+
+    // --- Shortcuts System ---
+    const DEFAULT_SHORTCUTS = [
+      { id: 'sc_yt', name: 'YouTube', url: 'https://youtube.com' },
+      { id: 'sc_vk', name: 'ВКонтакте', url: 'https://vk.com' },
+      { id: 'sc_tg', name: 'Telegram', url: 'https://web.telegram.org' },
+      { id: 'sc_gh', name: 'GitHub', url: 'https://github.com' },
+      { id: 'sc_tw', name: 'Twitch', url: 'https://twitch.tv' },
+      { id: 'sc_rd', name: 'Reddit', url: 'https://reddit.com' },
+      { id: 'sc_cws', name: 'Chrome Store', url: 'https://chromewebstore.google.com' }
+    ];
+
+    function getSavedShortcuts() {
+      try {
+        const data = localStorage.getItem('blackhole_shortcuts') || localStorage.getItem('eclipse_shortcuts');
+        if (data) {
+          const parsed = JSON.parse(data);
+          if (Array.isArray(parsed)) return parsed;
+        }
+      } catch (e) {}
+      return DEFAULT_SHORTCUTS;
+    }
+
+    function saveShortcuts(shortcuts) {
+      try {
+        localStorage.setItem('blackhole_shortcuts', JSON.stringify(shortcuts));
+        localStorage.setItem('eclipse_shortcuts', JSON.stringify(shortcuts));
+      } catch (e) {}
+    }
+
+    function getFaviconUrl(url) {
+      try {
+        const u = new URL(url.startsWith('http') ? url : 'https://' + url);
+        return `https://www.google.com/s2/favicons?domain=${u.hostname}&sz=64`;
+      } catch (e) {
+        return '';
+      }
+    }
+
+    const shortcutsGrid = document.getElementById('shortcuts-grid');
+    const shortcutModal = document.getElementById('shortcut-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const shortcutNameInput = document.getElementById('shortcut-name');
+    const shortcutUrlInput = document.getElementById('shortcut-url');
+    const btnModalCancel = document.getElementById('btn-modal-cancel');
+    const btnModalSave = document.getElementById('btn-modal-save');
+
+    let currentEditingId = null;
+    let draggedIndex = null;
+    let justDragged = false;
+
+    function renderShortcuts() {
+      const shortcuts = getSavedShortcuts();
+      shortcutsGrid.innerHTML = '';
+
+      shortcuts.forEach((item, index) => {
+        const el = document.createElement('div');
+        el.className = 'shortcut-item';
+        el.title = `${item.name} (${item.url})`;
+        el.setAttribute('draggable', 'true');
+        el.dataset.index = index;
+        el.dataset.id = item.id;
+
+        const faviconUrl = getFaviconUrl(item.url);
+        const letter = (item.name || 'W').charAt(0).toUpperCase();
+
+        el.innerHTML = `
+          <div class="shortcut-actions">
+            <button class="shortcut-btn-action btn-edit" title="Редактировать" draggable="false">✎</button>
+            <button class="shortcut-btn-action btn-del" title="Удалить" draggable="false">✕</button>
+          </div>
+          <div class="shortcut-icon-wrapper" draggable="false">
+            <img class="shortcut-icon" src="${faviconUrl}" alt="${item.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" draggable="false">
+            <div class="shortcut-letter-fallback" style="display:none;" draggable="false">${letter}</div>
+          </div>
+          <span class="shortcut-title" draggable="false">${item.name}</span>
+        `;
+
+        // Click on item opens site (only if not dragging)
+        el.addEventListener('click', (e) => {
+          if (justDragged) return;
+          if (e.target.closest('.shortcut-actions')) return;
+          let targetUrl = item.url;
+          if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+            targetUrl = 'https://' + targetUrl;
+          }
+          window.location.href = targetUrl;
+        });
+
+        // Drag & Drop handlers
+        el.addEventListener('dragstart', (e) => {
+          if (e.target.closest('.shortcut-actions')) {
+            e.preventDefault();
+            return;
+          }
+          draggedIndex = index;
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', item.id);
+          setTimeout(() => {
+            el.classList.add('is-dragging');
+          }, 0);
+        });
+
+        el.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          if (draggedIndex !== null && draggedIndex !== index) {
+            el.classList.add('drag-over');
+          }
+        });
+
+        el.addEventListener('dragleave', (e) => {
+          if (!el.contains(e.relatedTarget)) {
+            el.classList.remove('drag-over');
+          }
+        });
+
+        el.addEventListener('drop', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          el.classList.remove('drag-over');
+          if (draggedIndex !== null && draggedIndex !== index) {
+            const list = [...getSavedShortcuts()];
+            const [movedItem] = list.splice(draggedIndex, 1);
+            list.splice(index, 0, movedItem);
+            saveShortcuts(list);
+            justDragged = true;
+            setTimeout(() => { justDragged = false; }, 150);
+            renderShortcuts();
+          }
+        });
+
+        el.addEventListener('dragend', () => {
+          el.classList.remove('is-dragging');
+          document.querySelectorAll('.shortcut-item').forEach(itemEl => {
+            itemEl.classList.remove('drag-over');
+            itemEl.classList.remove('is-dragging');
+          });
+          draggedIndex = null;
+          justDragged = true;
+          setTimeout(() => { justDragged = false; }, 150);
+        });
+
+        // Delete button
+        const delBtn = el.querySelector('.btn-del');
+        delBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const list = getSavedShortcuts().filter(s => s.id !== item.id);
+          saveShortcuts(list);
+          renderShortcuts();
+        });
+
+        // Edit button
+        const editBtn = el.querySelector('.btn-edit');
+        editBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openEditModal(item);
+        });
+
+        shortcutsGrid.appendChild(el);
+      });
+
+      // Add Shortcut Button
+      const addEl = document.createElement('div');
+      addEl.className = 'shortcut-item shortcut-add-item';
+      addEl.title = 'Добавить ярлык на сайт';
+      addEl.innerHTML = `
+        <div class="shortcut-icon-wrapper">
+          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.2" fill="none">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </div>
+        <span class="shortcut-title">Добавить</span>
+      `;
+      addEl.addEventListener('click', () => {
+        openAddModal();
+      });
+
+      // Allow dragging onto "Add" button to place at end of list
+      addEl.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (draggedIndex !== null) {
+          addEl.classList.add('drag-over');
+        }
+      });
+      addEl.addEventListener('dragleave', (e) => {
+        if (!addEl.contains(e.relatedTarget)) {
+          addEl.classList.remove('drag-over');
+        }
+      });
+      addEl.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        addEl.classList.remove('drag-over');
+        if (draggedIndex !== null) {
+          const list = [...getSavedShortcuts()];
+          const [movedItem] = list.splice(draggedIndex, 1);
+          list.push(movedItem);
+          saveShortcuts(list);
+          justDragged = true;
+          setTimeout(() => { justDragged = false; }, 150);
+          renderShortcuts();
+        }
+      });
+
+      shortcutsGrid.appendChild(addEl);
+    }
+
+    function openAddModal() {
+      currentEditingId = null;
+      modalTitle.innerHTML = `⚡ Добавить ярлык`;
+      shortcutNameInput.value = '';
+      shortcutUrlInput.value = '';
+      shortcutModal.classList.add('open');
+      setTimeout(() => shortcutUrlInput.focus(), 50);
+    }
+
+    function openEditModal(item) {
+      currentEditingId = item.id;
+      modalTitle.innerHTML = `✎ Редактировать ярлык`;
+      shortcutNameInput.value = item.name;
+      shortcutUrlInput.value = item.url;
+      shortcutModal.classList.add('open');
+      setTimeout(() => shortcutNameInput.focus(), 50);
+    }
+
+    function closeModal() {
+      shortcutModal.classList.remove('open');
+      currentEditingId = null;
+    }
+
+    btnModalCancel.addEventListener('click', closeModal);
+    shortcutModal.addEventListener('click', (e) => {
+      if (e.target === shortcutModal) closeModal();
+    });
+
+    // Auto-fill name when typing URL if name is empty
+    shortcutUrlInput.addEventListener('blur', () => {
+      if (!shortcutNameInput.value.trim() && shortcutUrlInput.value.trim()) {
+        try {
+          const raw = shortcutUrlInput.value.trim();
+          const u = new URL(raw.startsWith('http') ? raw : 'https://' + raw);
+          const parts = u.hostname.replace(/^www\./, '').split('.');
+          if (parts[0]) {
+            shortcutNameInput.value = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+          }
+        } catch (e) {}
+      }
+    });
+
+    btnModalSave.addEventListener('click', () => {
+      let url = shortcutUrlInput.value.trim();
+      let name = shortcutNameInput.value.trim();
+
+      if (!url) {
+        shortcutUrlInput.focus();
+        return;
+      }
+
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+      }
+
+      if (!name) {
+        try {
+          const u = new URL(url);
+          name = u.hostname.replace(/^www\./, '');
+        } catch (e) {
+          name = 'Сайт';
+        }
+      }
+
+      const list = getSavedShortcuts();
+      if (currentEditingId) {
+        const idx = list.findIndex(s => s.id === currentEditingId);
+        if (idx !== -1) {
+          list[idx] = { ...list[idx], name, url };
+        }
+      } else {
+        list.push({
+          id: 'sc_' + Date.now(),
+          name,
+          url
+        });
+      }
+
+      saveShortcuts(list);
+      renderShortcuts();
+      closeModal();
+    });
+
+    shortcutNameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') btnModalSave.click();
+      if (e.key === 'Escape') closeModal();
+    });
+    shortcutUrlInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') btnModalSave.click();
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // --- Changelog Older Versions Toggle ---
+    const btnToggleChangelog = document.getElementById('btn-toggle-changelog');
+    const olderVersions = document.getElementById('older-versions');
+    const changelogBtnText = document.getElementById('changelog-btn-text');
+
+    if (btnToggleChangelog && olderVersions) {
+      btnToggleChangelog.addEventListener('click', () => {
+        const isHidden = olderVersions.style.display === 'none';
+        if (isHidden) {
+          olderVersions.style.display = 'flex';
+          btnToggleChangelog.classList.add('expanded');
+          changelogBtnText.textContent = 'Свернуть ранние версии';
+        } else {
+          olderVersions.style.display = 'none';
+          btnToggleChangelog.classList.remove('expanded');
+          changelogBtnText.textContent = 'Показать все версии (v1.8.3, v1.8.2, v1.8.1, v1.8.0, v1.7.0...)';
+        }
+      });
+    }
+
+    // --- Global Changelog Hide / Show Toggle ---
+    const changelogWrapper = document.getElementById('changelog-wrapper');
+    const btnBottomLeft = document.getElementById('btn-bottom-left-changelog');
+    const btnHideHeader = document.getElementById('btn-hide-changelog-header');
+    const bottomLeftText = document.getElementById('bottom-left-changelog-text');
+
+    function updateChangelogVisibility(hidden, animate = true) {
+      if (!changelogWrapper) return;
+      document.body.classList.toggle('changelog-collapsed', Boolean(hidden));
+      if (hidden) {
+        changelogWrapper.classList.add('changelog-hidden');
+        if (bottomLeftText) bottomLeftText.textContent = '📜 Ченджлог v1.15.0';
+        if (btnBottomLeft) {
+          btnBottomLeft.title = 'Показать историю обновлений (Changelog)';
+        }
+      } else {
+        changelogWrapper.classList.remove('changelog-hidden');
+        if (bottomLeftText) bottomLeftText.textContent = '📜 Скрыть ченджлог';
+        if (btnBottomLeft) {
+          btnBottomLeft.title = 'Скрыть историю обновлений';
+        }
+        if (animate) {
+          changelogWrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }
+      try {
+        localStorage.setItem('blackhole_changelog_hidden', hidden ? 'true' : 'false');
+      } catch (e) {}
+    }
+
+    // Initialize state from localStorage (default: false / shown)
+    const savedHiddenState = localStorage.getItem('blackhole_changelog_hidden') === 'true';
+    updateChangelogVisibility(savedHiddenState, false);
+
+    if (btnBottomLeft) {
+      btnBottomLeft.addEventListener('click', () => {
+        const isCurrentlyHidden = changelogWrapper ? changelogWrapper.classList.contains('changelog-hidden') : false;
+        updateChangelogVisibility(!isCurrentlyHidden, true);
+      });
+    }
+
+    if (btnHideHeader) {
+      btnHideHeader.addEventListener('click', () => {
+        updateChangelogVisibility(true, false);
+      });
+    }
+
+    // --- Theme Handling ---
+    function applyTheme(theme) {
+      const isLight = theme === 'light' || (theme === 'system' && window.matchMedia && !window.matchMedia('(prefers-color-scheme: dark)').matches);
+      document.body.classList.toggle('theme-light', isLight);
+    }
+
+    async function loadTheme() {
+      try {
+        let theme = localStorage.getItem('eclipse_theme');
+        if (!theme && window.electronAPI && window.electronAPI.getSettings) {
+          const s = await window.electronAPI.getSettings();
+          if (s && s.theme) theme = s.theme;
+        }
+        applyTheme(theme || 'dark');
+      } catch (e) {
+        applyTheme('dark');
+      }
+    }
+
+    loadTheme();
+
+    if (window.matchMedia) {
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        loadTheme();
+      });
+    }
+
+    if (window.electronAPI && window.electronAPI.onThemeChanged) {
+      window.electronAPI.onThemeChanged((data) => {
+        if (data && data.theme) applyTheme(data.theme);
+      });
+    }
+
+    // --- GitHub Badge Navigation ---
+    const btnGithub = document.getElementById('btn-bottom-right-github');
+    if (btnGithub) {
+      btnGithub.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.location.href = 'https://github.com/Karasu287/Black-hole-browser-';
+      });
+    }
+
+    
+    // --- Neon & Background Customization Controller ---
+    const customBgLayer = document.getElementById('custom-bg-layer');
+    const customBgOverlay = document.getElementById('custom-bg-overlay');
+    const btnCustomize = document.getElementById('btn-customize-newtab');
+    const customizePanel = document.getElementById('customize-panel');
+    const customizeBackdrop = document.getElementById('customize-panel-backdrop');
+    const btnCloseCustomize = document.getElementById('btn-close-customize');
+
+    const neonBadge = document.getElementById('neon-current-badge');
+    const neonPicker = document.getElementById('custom-neon-picker');
+    const neonHexInput = document.getElementById('custom-neon-hex');
+    const neonPickerPreview = document.getElementById('neon-picker-preview');
+    const neonPresetBtns = document.querySelectorAll('.neon-color-btn');
+
+    const btnUploadBg = document.getElementById('btn-upload-bg');
+    const btnResetBg = document.getElementById('btn-reset-bg');
+    const fileBgInput = document.getElementById('file-bg-input');
+    const bgStatusText = document.getElementById('bg-status-text');
+
+    const bgDimSlider = document.getElementById('bg-dim-slider');
+    const bgDimBadge = document.getElementById('bg-dim-badge');
+    const bgBlurSlider = document.getElementById('bg-blur-slider');
+    const bgBlurBadge = document.getElementById('bg-blur-badge');
+
+    // Wallpaper Engine Style Elements
+    const weFitSelect = document.getElementById('we-fit-select');
+    const wePosX = document.getElementById('we-pos-x');
+    const weValPosX = document.getElementById('we-val-pos-x');
+    const wePosY = document.getElementById('we-pos-y');
+    const weValPosY = document.getElementById('we-val-pos-y');
+    const weScale = document.getElementById('we-scale');
+    const weValScale = document.getElementById('we-val-scale');
+    const weFlip = document.getElementById('we-flip');
+
+    let currentConfig = {
+      neonColor: localStorage.getItem('blackhole_neon_color') || '#a855f7',
+      bgType: localStorage.getItem('blackhole_bg_type') || 'default',
+      bgImage: localStorage.getItem('blackhole_bg_image') || '',
+      bgDim: parseInt(localStorage.getItem('blackhole_bg_dim') || '30', 10),
+      bgBlur: parseInt(localStorage.getItem('blackhole_bg_blur') || '0', 10),
+      bgFit: localStorage.getItem('blackhole_bg_fit') || 'cover',
+      bgPosX: parseInt(localStorage.getItem('blackhole_bg_pos_x') || '50', 10),
+      bgPosY: parseInt(localStorage.getItem('blackhole_bg_pos_y') || '50', 10),
+      bgScale: parseInt(localStorage.getItem('blackhole_bg_scale') || '100', 10),
+      bgFlip: localStorage.getItem('blackhole_bg_flip') === 'true'
+    };
+
+    function hexToRgb(hex) {
+      if (!hex) return { r: 168, g: 85, b: 247 };
+      let c = hex.trim().replace('#', '');
+      if (c.length === 3) c = c[0] + c[0] + c[1] + c[1] + c[2] + c[2];
+      if (c.length !== 6) return { r: 168, g: 85, b: 247 };
+      const num = parseInt(c, 16);
+      if (isNaN(num)) return { r: 168, g: 85, b: 247 };
+      return {
+        r: (num >> 16) & 255,
+        g: (num >> 8) & 255,
+        b: num & 255
+      };
+    }
+
+    function applyNeon(hexColor, save = false) {
+      if (!hexColor) return;
+      currentConfig.neonColor = hexColor;
+      const rgb = hexToRgb(hexColor);
+      const root = document.documentElement;
+
+      root.style.setProperty('--accent', hexColor);
+      root.style.setProperty('--accent-glow', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.35)`);
+      root.style.setProperty('--accent-glow-strong', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.7)`);
+
+      if (neonBadge) neonBadge.textContent = hexColor.toLowerCase();
+      if (neonPicker) neonPicker.value = hexColor;
+      if (neonHexInput) neonHexInput.value = hexColor.toLowerCase();
+      if (neonPickerPreview) neonPickerPreview.style.backgroundColor = hexColor;
+
+      neonPresetBtns.forEach(btn => {
+        btn.classList.toggle('active', (btn.dataset.color || '').toLowerCase() === hexColor.toLowerCase());
+      });
+
+      try {
+        localStorage.setItem('blackhole_neon_color', hexColor);
+      } catch (e) {}
+
+      if (save && window.electronAPI && window.electronAPI.updateSettings) {
+        window.electronAPI.updateSettings({ neonThemeColor: hexColor });
+      }
+    }
+
+    function applyBackground(cfg, save = false) {
+      if (!cfg) cfg = currentConfig;
+      Object.assign(currentConfig, cfg);
+
+      const hasCustom = currentConfig.bgType === 'custom' && currentConfig.bgImage;
+      const bgUrl = hasCustom ? currentConfig.bgImage : 'main_screen_background.png';
+
+      if (customBgLayer) {
+        customBgLayer.style.backgroundImage = `url('${bgUrl}')`;
+        customBgLayer.style.backgroundPosition = `${currentConfig.bgPosX}% ${currentConfig.bgPosY}%`;
+
+        let bgSize = 'cover';
+        let bgRepeat = 'no-repeat';
+
+        if (currentConfig.bgFit === 'contain') {
+          bgSize = 'contain';
+        } else if (currentConfig.bgFit === 'stretch') {
+          bgSize = '100% 100%';
+        } else if (currentConfig.bgFit === 'repeat') {
+          bgSize = 'auto';
+          bgRepeat = 'repeat';
+        } else if (currentConfig.bgFit === 'free') {
+          bgSize = 'auto';
+        } else {
+          bgSize = 'cover';
+        }
+
+        customBgLayer.style.backgroundSize = bgSize;
+        customBgLayer.style.backgroundRepeat = bgRepeat;
+
+        const zoom = (currentConfig.bgScale || 100) / 100;
+        const flip = currentConfig.bgFlip ? -1 : 1;
+        const blurOver = currentConfig.bgBlur > 0 ? 1.04 : 1.0;
+        const scaleX = zoom * flip * blurOver;
+        const scaleY = zoom * blurOver;
+
+        customBgLayer.style.transformOrigin = `${currentConfig.bgPosX}% ${currentConfig.bgPosY}%`;
+        customBgLayer.style.transform = `scale(${scaleX}, ${scaleY}) translate3d(0, 0, 0)`;
+        customBgLayer.style.filter = currentConfig.bgBlur > 0 ? `blur(${currentConfig.bgBlur}px)` : 'none';
+      }
+
+      if (customBgOverlay) {
+        const dimAlpha = Math.min(95, Math.max(0, currentConfig.bgDim)) / 100;
+        customBgOverlay.style.backgroundColor = `rgba(0, 0, 0, ${dimAlpha})`;
+      }
+
+      // Sync UI inputs
+      if (bgDimSlider) bgDimSlider.value = currentConfig.bgDim;
+      if (bgDimBadge) bgDimBadge.textContent = `${currentConfig.bgDim}%`;
+
+      if (bgBlurSlider) bgBlurSlider.value = currentConfig.bgBlur;
+      if (bgBlurBadge) bgBlurBadge.textContent = `${currentConfig.bgBlur}px`;
+
+      if (bgStatusText) {
+        bgStatusText.textContent = hasCustom ? 'Используется своё изображение' : 'Используется стандартный фон';
+      }
+
+      if (weFitSelect) weFitSelect.value = currentConfig.bgFit || 'cover';
+
+      if (wePosX) wePosX.value = currentConfig.bgPosX;
+      if (weValPosX) weValPosX.textContent = currentConfig.bgPosX;
+
+      if (wePosY) wePosY.value = currentConfig.bgPosY;
+      if (weValPosY) weValPosY.textContent = currentConfig.bgPosY;
+
+      if (weScale) weScale.value = currentConfig.bgScale;
+      if (weValScale) weValScale.textContent = currentConfig.bgScale;
+
+      if (weFlip) weFlip.checked = Boolean(currentConfig.bgFlip);
+
+      try {
+        localStorage.setItem('blackhole_bg_type', currentConfig.bgType);
+        localStorage.setItem('blackhole_bg_image', currentConfig.bgImage || '');
+        localStorage.setItem('blackhole_bg_dim', String(currentConfig.bgDim));
+        localStorage.setItem('blackhole_bg_blur', String(currentConfig.bgBlur));
+        localStorage.setItem('blackhole_bg_fit', currentConfig.bgFit);
+        localStorage.setItem('blackhole_bg_pos_x', String(currentConfig.bgPosX));
+        localStorage.setItem('blackhole_bg_pos_y', String(currentConfig.bgPosY));
+        localStorage.setItem('blackhole_bg_scale', String(currentConfig.bgScale));
+        localStorage.setItem('blackhole_bg_flip', currentConfig.bgFlip ? 'true' : 'false');
+      } catch (e) {}
+
+      if (save && window.electronAPI && window.electronAPI.updateSettings) {
+        window.electronAPI.updateSettings({
+          newTabBackgroundType: currentConfig.bgType,
+          newTabBackgroundImage: currentConfig.bgImage,
+          newTabBackgroundDim: currentConfig.bgDim,
+          newTabBackgroundBlur: currentConfig.bgBlur,
+          newTabBackgroundFit: currentConfig.bgFit,
+          newTabBackgroundPosX: currentConfig.bgPosX,
+          newTabBackgroundPosY: currentConfig.bgPosY,
+          newTabBackgroundScale: currentConfig.bgScale,
+          newTabBackgroundFlip: currentConfig.bgFlip
+        });
+      }
+    }
+
+    // Toggle customization panel
+    function openCustomizePanel() {
+      if (customizePanel) customizePanel.classList.remove('hidden');
+      if (customizeBackdrop) customizeBackdrop.classList.remove('hidden');
+    }
+
+    function closeCustomizePanel() {
+      if (customizePanel) customizePanel.classList.add('hidden');
+      if (customizeBackdrop) customizeBackdrop.classList.add('hidden');
+    }
+
+    if (btnCustomize) {
+      btnCustomize.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openCustomizePanel();
+      });
+    }
+
+    if (btnCloseCustomize) {
+      btnCloseCustomize.addEventListener('click', closeCustomizePanel);
+    }
+
+    if (customizeBackdrop) {
+      customizeBackdrop.addEventListener('click', closeCustomizePanel);
+    }
+
+    // Neon presets & picker events
+    neonPresetBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const color = btn.dataset.color;
+        if (color) applyNeon(color, true);
+      });
+    });
+
+    if (neonPicker) {
+      neonPicker.addEventListener('input', (e) => {
+        applyNeon(e.target.value, false);
+      });
+      neonPicker.addEventListener('change', (e) => {
+        applyNeon(e.target.value, true);
+      });
+    }
+
+    if (neonHexInput) {
+      neonHexInput.addEventListener('change', (e) => {
+        let val = e.target.value.trim();
+        if (!val.startsWith('#')) val = '#' + val;
+        if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+          applyNeon(val, true);
+        }
+      });
+    }
+
+    // Background upload & reset
+    if (btnUploadBg) {
+      btnUploadBg.addEventListener('click', async () => {
+        if (window.electronAPI && window.electronAPI.selectBackgroundImage) {
+          const res = await window.electronAPI.selectBackgroundImage();
+          if (res && res.success && res.dataUrl) {
+            applyBackground({
+              bgType: 'custom',
+              bgImage: res.dataUrl
+            }, true);
+          }
+        } else if (fileBgInput) {
+          fileBgInput.click();
+        }
+      });
+    }
+
+    if (fileBgInput) {
+      fileBgInput.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (evt) => {
+            const dataUrl = evt.target.result;
+            applyBackground({
+              bgType: 'custom',
+              bgImage: dataUrl
+            }, true);
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    if (btnResetBg) {
+      btnResetBg.addEventListener('click', () => {
+        applyBackground({
+          bgType: 'default',
+          bgImage: '',
+          bgFit: 'cover',
+          bgPosX: 50,
+          bgPosY: 50,
+          bgScale: 100,
+          bgFlip: false
+        }, true);
+      });
+    }
+
+    // Dimming slider
+    if (bgDimSlider) {
+      bgDimSlider.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10) || 0;
+        currentConfig.bgDim = val;
+        if (bgDimBadge) bgDimBadge.textContent = `${val}%`;
+        if (customBgOverlay) customBgOverlay.style.backgroundColor = `rgba(0, 0, 0, ${val / 100})`;
+      });
+      bgDimSlider.addEventListener('change', (e) => {
+        const val = parseInt(e.target.value, 10) || 0;
+        applyBackground({ bgDim: val }, true);
+      });
+    }
+
+    // Blur slider
+    if (bgBlurSlider) {
+      bgBlurSlider.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10) || 0;
+        currentConfig.bgBlur = val;
+        if (bgBlurBadge) bgBlurBadge.textContent = `${val}px`;
+        if (customBgLayer) {
+          customBgLayer.style.filter = val > 0 ? `blur(${val}px)` : 'none';
+          const zoom = (currentConfig.bgScale || 100) / 100;
+          const flip = currentConfig.bgFlip ? -1 : 1;
+          const blurOver = val > 0 ? 1.04 : 1.0;
+          customBgLayer.style.transform = `scale(${zoom * flip * blurOver}, ${zoom * blurOver}) translate3d(0,0,0)`;
+        }
+      });
+      bgBlurSlider.addEventListener('change', (e) => {
+        const val = parseInt(e.target.value, 10) || 0;
+        applyBackground({ bgBlur: val }, true);
+      });
+    }
+
+    // Wallpaper Engine Style Controls Events
+    if (weFitSelect) {
+      weFitSelect.addEventListener('change', (e) => {
+        applyBackground({ bgFit: e.target.value }, true);
+      });
+    }
+
+    if (wePosX) {
+      wePosX.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10) || 0;
+        currentConfig.bgPosX = val;
+        if (weValPosX) weValPosX.textContent = val;
+        applyBackground({ bgPosX: val }, false);
+      });
+      wePosX.addEventListener('change', (e) => {
+        const val = parseInt(e.target.value, 10) || 0;
+        applyBackground({ bgPosX: val }, true);
+      });
+    }
+
+    if (wePosY) {
+      wePosY.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10) || 0;
+        currentConfig.bgPosY = val;
+        if (weValPosY) weValPosY.textContent = val;
+        applyBackground({ bgPosY: val }, false);
+      });
+      wePosY.addEventListener('change', (e) => {
+        const val = parseInt(e.target.value, 10) || 0;
+        applyBackground({ bgPosY: val }, true);
+      });
+    }
+
+    if (weScale) {
+      weScale.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10) || 100;
+        currentConfig.bgScale = val;
+        if (weValScale) weValScale.textContent = val;
+        applyBackground({ bgScale: val }, false);
+      });
+      weScale.addEventListener('change', (e) => {
+        const val = parseInt(e.target.value, 10) || 100;
+        applyBackground({ bgScale: val }, true);
+      });
+    }
+
+    if (weFlip) {
+      weFlip.addEventListener('change', (e) => {
+        applyBackground({ bgFlip: e.target.checked }, true);
+      });
+    }
+
+    // Load initial settings from Electron backend
+    async function loadCustomizationSettings() {
+      applyNeon(currentConfig.neonColor, false);
+      applyBackground(currentConfig, false);
+
+      if (window.electronAPI && window.electronAPI.getSettings) {
+        try {
+          const s = await window.electronAPI.getSettings();
+          if (s) {
+            if (s.neonThemeColor) applyNeon(s.neonThemeColor, false);
+            applyBackground({
+              bgType: s.newTabBackgroundType || currentConfig.bgType,
+              bgImage: s.newTabBackgroundImage !== undefined ? s.newTabBackgroundImage : currentConfig.bgImage,
+              bgDim: s.newTabBackgroundDim !== undefined ? s.newTabBackgroundDim : currentConfig.bgDim,
+              bgBlur: s.newTabBackgroundBlur !== undefined ? s.newTabBackgroundBlur : currentConfig.bgBlur,
+              bgFit: s.newTabBackgroundFit || currentConfig.bgFit,
+              bgPosX: s.newTabBackgroundPosX !== undefined ? s.newTabBackgroundPosX : currentConfig.bgPosX,
+              bgPosY: s.newTabBackgroundPosY !== undefined ? s.newTabBackgroundPosY : currentConfig.bgPosY,
+              bgScale: s.newTabBackgroundScale !== undefined ? s.newTabBackgroundScale : currentConfig.bgScale,
+              bgFlip: s.newTabBackgroundFlip !== undefined ? s.newTabBackgroundFlip : currentConfig.bgFlip
+            }, false);
+          }
+        } catch (e) {
+          console.warn('Failed to get settings in newtab:', e);
+        }
+      }
+    }
+
+    loadCustomizationSettings();
+
+    // Listen for live neon & settings updates from other tabs or main window
+    if (window.electronAPI && window.electronAPI.onNeonThemeChanged) {
+      window.electronAPI.onNeonThemeChanged((data) => {
+        if (data && data.neonThemeColor) {
+          applyNeon(data.neonThemeColor, false);
+        }
+      });
+    }
+
+    if (window.electronAPI && window.electronAPI.onSettingsChanged) {
+      window.electronAPI.onSettingsChanged((s) => {
+        if (!s) return;
+        if (s.neonThemeColor) applyNeon(s.neonThemeColor, false);
+        applyBackground({
+          bgType: s.newTabBackgroundType !== undefined ? s.newTabBackgroundType : currentConfig.bgType,
+          bgImage: s.newTabBackgroundImage !== undefined ? s.newTabBackgroundImage : currentConfig.bgImage,
+          bgDim: s.newTabBackgroundDim !== undefined ? s.newTabBackgroundDim : currentConfig.bgDim,
+          bgBlur: s.newTabBackgroundBlur !== undefined ? s.newTabBackgroundBlur : currentConfig.bgBlur,
+          bgFit: s.newTabBackgroundFit || currentConfig.bgFit,
+          bgPosX: s.newTabBackgroundPosX !== undefined ? s.newTabBackgroundPosX : currentConfig.bgPosX,
+          bgPosY: s.newTabBackgroundPosY !== undefined ? s.newTabBackgroundPosY : currentConfig.bgPosY,
+          bgScale: s.newTabBackgroundScale !== undefined ? s.newTabBackgroundScale : currentConfig.bgScale,
+          bgFlip: s.newTabBackgroundFlip !== undefined ? s.newTabBackgroundFlip : currentConfig.bgFlip
+        }, false);
+      });
+    }
+
+
+    // Initial render
+    renderShortcuts();
+  </script>
+</body>
+</html>
