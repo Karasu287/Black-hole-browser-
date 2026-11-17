@@ -2,6 +2,44 @@
 
 All notable changes, optimizations, and features across Black hole Browser releases.
 
+## [v1.15.1] — 2026-11-18
+
+### 🇬🇧 English: Alt-Tab & Background Stability Hotfix, Game Booster Optimization & MediaSession Throttling
+- **🛡️ Alt-Tab & Background Crash Elimination**:
+  - Fixed an issue where lowering the Main and GPU processes to `PRIORITY_BELOW_NORMAL` caused the Chromium GPU Watchdog to starve and terminate the browser when Alt-Tabbed into a game or other application.
+  - The Main process and GPU/Audio/Utility child processes now strictly maintain `PRIORITY_NORMAL`, ensuring Chromium IPC heartbeats and graphics pipelines never deadlock.
+  - Game Booster now cleanly and safely manages non-audible tab renderers without touching core system coordination threads.
+- **⚡ Chromium Flags & Background Performance Tuning**:
+  - Removed unstable experimental `CanvasOopRasterization` that was triggering DWM GPU device resets on Windows.
+  - Enabled native background timer throttling to drop background CPU/RAM usage to near zero when the browser is unfocused or minimized.
+  - Replaced hardcoded 4GB V8 heap allocations with adaptive garbage collection to prevent memory bloat during multi-tasking.
+- **🎬 Universal PiP & MediaSession Optimization**:
+  - Throttled `syncMediaSessionState` from 60 calls/sec during `timeupdate` to max 1 update/sec, eliminating IPC buffer thrashing.
+  - Debounced DOM video discovery MutationObservers from micro-task floods down to a stable 600ms interval.
+- **💾 Disk I/O & Logger Enhancements**:
+  - Batched AdBlocker tracker statistics disk-write intervals (from 80ms disk thrashing to a smooth 5000ms debounce).
+  - Added native file logging to `userData/logs/browser_crash.log` for automatic diagnostics of any future exceptions.
+
+---
+
+### 🇷🇺 Русский: Хотфикс вылетов в Alt-Tab и фоне, стабилизация Game Booster и оптимизация PiP
+- **🛡️ Устранение вылетов при переключении окон (Alt+Tab)**:
+  - Исправлена критическая проблема: понижение приоритета главного процесса и GPU до `BELOW_NORMAL` приводило к тому, что Chromium GPU Watchdog считал процесс зависшим и аварийно закрывал браузер, пока пользователь играл в игру или находился в другом окне.
+  - Главный процесс (`process.pid`) и дочерние сервисы (GPU, Audio, Utility) теперь гарантированно сохраняют нормальный приоритет, предотвращая зависания внутренних IPC-запросов Chromium.
+  - Игровой режим оптимизирован: приоритет безопасно регулируется только для фоновых неактивных вкладок без звука.
+- **⚡ Оптимизация флагов движка и потребления в фоне**:
+  - Удален нестабильный флаг `CanvasOopRasterization`, вызывавший сбои GPU-процесса на Windows при кадрировании фона и видео.
+  - Восстановлено нативное троттлирование фоновых таймеров в Chromium — теперь при сворачивании и переключении в другие приложения фоновые вкладки снижают потребление CPU почти до 0%.
+  - Убран форсированный 4ГБ лимит кучи V8, оптимизирована сборка мусора при длительной работе с вкладками.
+- **🎬 Оптимизация PiP и MediaSession**:
+  - Троттлинг обновлений состояния видео в PiP (таймлайн больше не шлет запросы до 60 раз в секунду на событии `timeupdate`).
+  - Добавлен 600 мс дебаунс на поиск видеоэлементов в MutationObserver (устранена нагрузка на процессор при динамических изменениях DOM плееров).
+- **💾 Оптимизация дискового ввода-вывода и логирование**:
+  - Запись счетчика заблокированной рекламы на диск переведена на 5-секундный пакетный батчинг.
+  - Добавлено автоматическое сохранение аварийных событий в `userData/logs/browser_crash.log`.
+
+---
+
 ## [v1.15.0] — 2026-11-17
 
 ### 🇬🇧 English: Wallpaper Engine Background Customization, Global Neon Accents & Universal PiP
