@@ -1,4 +1,4 @@
-# 🌌 Black hole Browser (v1.14.0)
+# 🌌 Black hole Browser (v1.15.0)
 
 [![GitHub Release](https://img.shields.io/github/v/release/Karasu287/Black-hole-browser-?color=a855f7&label=Release)](https://github.com/Karasu287/Black-hole-browser-/releases)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -80,7 +80,7 @@ An ultra-fast, deeply optimized web browser powered by **Chromium (Blink + V8)**
 | `Esc` | Close modal / search bar |
 
 ### 📦 Installation & Setup
-- **Windows Installer**: Download `Black_Hole_Browser_Setup_v1.14.0.exe` from [Releases](https://github.com/Karasu287/Black-hole-browser-/releases).
+- **Windows Installer**: Download `Black_Hole_Browser_Setup_v1.15.0.exe` from [Releases](https://github.com/Karasu287/Black-hole-browser-/releases).
 - **Run from Source**:
 ```powershell
 npm install
