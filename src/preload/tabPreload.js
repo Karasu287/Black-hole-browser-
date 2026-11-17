@@ -1118,9 +1118,14 @@ function initPictureInPictureEngine() {
       }
 
       // 3. Complete MediaSession Synchronizer (PlaybackState, Metadata, PositionState)
-      function syncMediaSessionState() {
+      let _lastMediaSyncTime = 0;
+      function syncMediaSessionState(force = false) {
         try {
           if (!('mediaSession' in navigator)) return;
+          const now = Date.now();
+          if (!force && (now - _lastMediaSyncTime < 1000)) return;
+          _lastMediaSyncTime = now;
+
           const v = getActiveVideo();
           if (!v) return;
 
@@ -1253,30 +1258,38 @@ function initPictureInPictureEngine() {
           }
         } catch (e) {}
 
-        const events = ['play', 'pause', 'playing', 'timeupdate', 'seeking', 'seeked', 'ratechange', 'durationchange'];
+        const events = ['play', 'pause', 'playing', 'seeking', 'seeked', 'ratechange', 'durationchange'];
         events.forEach(evt => {
           video.addEventListener(evt, () => {
-            syncMediaSessionState();
+            syncMediaSessionState(true);
           }, { passive: true });
         });
+        video.addEventListener('timeupdate', () => {
+          syncMediaSessionState(false);
+        }, { passive: true });
 
         video.addEventListener('enterpictureinpicture', () => {
           registerPipMediaHandlers();
-          syncMediaSessionState();
+          syncMediaSessionState(true);
           const pipTimer = setInterval(() => {
             if (!document.pictureInPictureElement) {
               clearInterval(pipTimer);
               return;
             }
-            syncMediaSessionState();
-          }, 400);
+            syncMediaSessionState(false);
+          }, 1000);
         }, { passive: true });
       }
 
       document.querySelectorAll('video').forEach(hookVideo);
       try {
+        let _videoScanTimer = null;
         const obs = new MutationObserver(() => {
-          document.querySelectorAll('video').forEach(hookVideo);
+          if (_videoScanTimer) return;
+          _videoScanTimer = setTimeout(() => {
+            _videoScanTimer = null;
+            document.querySelectorAll('video').forEach(hookVideo);
+          }, 600);
         });
         const root = document.documentElement || document.body;
         if (root) obs.observe(root, { childList: true, subtree: true });
