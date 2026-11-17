@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Black hole Browser</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="theme-dark-oled">
+  <div id="browser-shell">
+    <!-- Top Bar Header -->
+    <header id="top-bar">
+      <!-- Row 1: Tab Strip & Window Controls -->
+      <div id="tab-strip-container">
+        <button id="btn-toggle-vertical-tabs-strip" class="vtab-strip-toggle-btn" title="Переключить на вертикальные вкладки (Ctrl+Shift+V)">
+          <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+        </button>
+        <span id="vtab-titlebar-label" class="vtab-titlebar-label hidden">Black hole Browser</span>
+
+        <div id="tabs-scroll-area">
+          <div id="tabs-list">
+            <!-- Tabs will be rendered dynamically -->
+          </div>
+          <button id="btn-new-tab" class="icon-btn" title="Новая вкладка (Ctrl+T)">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </button>
+        </div>
+
+        <div id="incognito-badge" class="incognito-badge hidden">
+          <span>🕶️</span>
+          <span>ИНКОГНИТО</span>
+        </div>
+
+        <!-- Dedicated Window Drag Area in Top-Right Corner -->
+        <div class="tab-strip-drag-spacer"></div>
+
+        <!-- Window Controls -->
+        <div id="window-controls">
+          <button id="btn-win-min" class="win-btn" title="Свернуть">
+            <svg viewBox="0 0 12 12" width="10" height="10"><rect y="5.5" width="12" height="1" fill="currentColor"/></svg>
+          </button>
+          <button id="btn-win-max" class="win-btn" title="Развернуть">
+            <svg viewBox="0 0 12 12" width="10" height="10"><rect x="1.5" y="1.5" width="9" height="9" stroke="currentColor" fill="none" stroke-width="1"/></svg>
+          </button>
+          <button id="btn-win-close" class="win-btn win-btn-close" title="Закрыть">
+            <svg viewBox="0 0 12 12" width="10" height="10"><line x1="1" y1="1" x2="11" y2="11" stroke="currentColor" stroke-width="1.2"/><line x1="11" y1="1" x2="1" y2="11" stroke="currentColor" stroke-width="1.2"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Row 2: Navigation Toolbar, Omnibox, Extensions & Tools -->
+      <div id="nav-toolbar">
+        <div class="nav-actions">
+          <button id="btn-back" class="nav-btn" title="Назад (Alt+Left)" disabled>
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          <button id="btn-forward" class="nav-btn" title="Вперед (Alt+Right)" disabled>
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+          <button id="btn-reload" class="nav-btn" title="Обновить (Ctrl+R)">
+            <svg id="icon-reload" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+            <svg id="icon-stop" class="hidden" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+          <button id="btn-home" class="nav-btn" title="Главная страница">
+            <svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+          </button>
+        </div>
+
+        <!-- Omnibox (Address & Search Bar) -->
+        <div id="omnibox-container">
+          <div id="security-badge" title="Защищенное соединение">
+            <svg id="icon-lock" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <svg id="icon-search" class="hidden" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </div>
+          <input type="text" id="omnibox-input" placeholder="Введите поисковый запрос или адрес сайта" spellcheck="false" autocomplete="off">
+          <div id="omnibox-actions">
+            <button id="btn-shield" class="mini-btn shield-btn" title="Black hole Shield (Блокировщик рекламы)">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+              <span id="shield-badge" class="shield-badge">0</span>
+            </button>
+            <button id="btn-bookmark-toggle" class="mini-btn" title="Добавить в закладки (Ctrl+D)">
+              <svg id="icon-star" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            </button>
+          </div>
+          <div id="load-progress-bar"></div>
+        </div>
+
+        <!-- Extensions & Tools Toolbar -->
+        <div id="extensions-toolbar">
+          <!-- Active Extension Icons rendered here -->
+          <div id="extension-action-icons"></div>
+
+          <div class="divider-v"></div>
+
+          <!-- New Window Button -->
+          <button id="btn-new-window" class="tool-btn" title="Новое окно (Ctrl+N)">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <line x1="3" y1="9" x2="21" y2="9"/>
+              <line x1="9" y1="21" x2="9" y2="9"/>
+            </svg>
+          </button>
+
+          <!-- Incognito Window Button -->
+          <button id="btn-incognito" class="tool-btn incognito-btn" title="Новое окно инкогнито (Ctrl+Shift+N)">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+
+          <!-- Memory Saver / Tab Sleeping status badge -->
+          <button id="btn-memory-saver" class="tool-btn" title="Экономия памяти (Tab Hibernation)">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="#10b981" stroke-width="2" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
+            <span id="mem-saved-badge">0 МБ</span>
+          </button>
+
+          <!-- Extensions Manager Button -->
+          <button id="btn-extensions-menu" class="tool-btn" title="Расширения (управление, удаление, настройки)">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5a2.5 2.5 0 0 0-5 0V5H4c-1.1 0-1.99.9-1.99 2v3.8H3.5c1.49 0 2.7 1.21 2.7 2.7s-1.21 2.7-2.7 2.7H2V20c0 1.1.9 2 2 2h3.8v-1.5c0-1.49 1.21-2.7 2.7-2.7 1.49 0 2.7 1.21 2.7 2.7V22H17c1.1 0 2-.9 2-2v-4h1.5a2.5 2.5 0 0 0 0-5z"></path></svg>
+          </button>
+
+          <!-- Passwords Button -->
+          <button id="btn-passwords-menu" class="tool-btn" title="Менеджер паролей">
+            <svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          </button>
+
+          <!-- Bookmarks Button -->
+          <button id="btn-bookmarks-menu" class="tool-btn" title="Закладки (Ctrl+B)">
+            <svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2" fill="none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+          </button>
+
+          <!-- History Button -->
+          <button id="btn-history-menu" class="tool-btn" title="История (Ctrl+H)">
+            <svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          </button>
+
+          <!-- Downloads Button -->
+          <button id="btn-downloads-menu" class="tool-btn" title="Загрузки (Ctrl+J)" style="position: relative;">
+            <svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <span id="downloads-toolbar-badge" class="downloads-toolbar-badge hidden"></span>
+          </button>
+
+          <!-- Split Screen Button -->
+          <button id="btn-split-screen" class="tool-btn" title="Разделить экран (2 вкладки рядом) (Alt+S)" style="position: relative;">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="3" x2="12" y2="21"></line></svg>
+            <span id="split-screen-badge" class="split-screen-badge hidden"></span>
+          </button>
+
+          <!-- Settings Button -->
+          <button id="btn-settings-menu" class="tool-btn" title="Настройки (Ctrl+,)" style="position: relative;">
+            <svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            <span id="nav-update-dot" class="nav-update-dot hidden" title="Доступно обновление браузера"></span>
+          </button>
+        </div>
+      </div>
+
+
+
+      <!-- Row 3: Bookmarks Bar (Quick Access) -->
+      <div id="bookmarks-bar">
+        <div id="bookmarks-bar-list"></div>
+      </div>
+    </header>
+
+    <!-- Vertical Tabs Sidebar (Left side tabs panel) -->
+    <aside id="vertical-tabs-sidebar" class="vertical-tabs-sidebar hidden">
+      <div class="vtab-sidebar-header">
+        <div class="vtab-header-left">
+          <button id="btn-vtab-collapse" class="vtab-icon-btn" title="Свернуть / Развернуть боковую панель">
+            <svg class="vtab-icon-collapse" viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            <svg class="vtab-icon-expand hidden" viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+          <span class="vtab-header-title">Вкладки</span>
+        </div>
+        <button id="btn-vtab-new-tab" class="vtab-new-tab-btn" title="Новая вкладка (Ctrl+T)">
+          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <span class="vtab-btn-text">Новая</span>
+        </button>
+      </div>
+
+      <div id="vertical-tabs-list" class="vtab-tabs-list">
+        <!-- Rendered vertical tabs -->
+      </div>
+
+      <div class="vtab-sidebar-footer">
+        <span id="vtab-tab-count" class="vtab-tab-count">0 вкладок</span>
+        <button id="btn-vtab-return-horizontal" class="vtab-footer-btn" title="Вернуться к горизонтальным вкладкам">
+          <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line></svg>
+          <span class="vtab-btn-text">Сверху</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Split Screen Interactive Divider & Controls -->
+    <div id="split-screen-divider" class="split-screen-divider hidden">
+      <div class="split-divider-line"></div>
+      <div class="split-divider-handle" title="Потяните для изменения пропорций">
+        <button id="btn-split-swap" class="split-mini-btn" title="Поменять вкладки местами">⇄</button>
+        <button id="btn-split-close" class="split-mini-btn" title="Закрыть разделение (Esc / Alt+S)">✕</button>
+      </div>
+    </div>
+
+    <!-- Find in page Overlay (Ctrl+F) -->
+    <div id="find-bar" class="hidden">
+      <input type="text" id="find-input" placeholder="Найти на странице...">
+      <button id="find-prev" class="mini-btn" title="Предыдущее">▲</button>
+      <button id="find-next" class="mini-btn" title="Следующее">▼</button>
+      <button id="find-close" class="mini-btn" title="Закрыть (Esc)">✕</button>
+    </div>
+
+    <!-- Black hole Shield Quick Control Modal -->
+    <div id="modal-shield" class="modal-overlay hidden">
+      <div class="modal-card modal-small">
+        <div class="modal-header">
+          <div class="modal-title">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+            <span>Black hole Shield</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span id="shield-status-tag" class="shield-status-tag active">АКТИВЕН</span>
+            <button class="modal-close-btn" data-close="modal-shield">✕</button>
+          </div>
+        </div>
+        
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+          <div class="shield-popup-domain" id="shield-current-domain">Загрузка...</div>
+          
+          <div class="shield-popup-stats">
+            <div class="shield-stat-box">
+              <span class="shield-stat-num" id="shield-tab-blocked-count">0</span>
+              <span class="shield-stat-lbl">На этой странице</span>
+            </div>
+            <div class="shield-stat-box">
+              <span class="shield-stat-num" id="shield-total-blocked-count">0</span>
+              <span class="shield-stat-lbl">Всего заблокировано</span>
+            </div>
+          </div>
+
+          <div class="shield-popup-controls">
+            <div class="shield-control-row">
+              <div class="shield-control-info">
+                <div class="shield-control-title">Блокировка на этом сайте</div>
+                <div class="shield-control-desc">Отключить для текущего домена</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="shield-domain-toggle" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="shield-control-row">
+              <div class="shield-control-info">
+                <div class="shield-control-title">Защита Black hole Shield</div>
+                <div class="shield-control-desc">Блокировка рекламы, трекеров и промо</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="shield-global-toggle" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="shield-popup-footer" style="border-top: 1px solid rgba(255, 255, 255, 0.07); padding-top: 10px; display: flex; justify-content: center;">
+            <button id="btn-shield-open-settings" class="shield-link-btn">⚙️ Открыть полные настройки блокировщика</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modals & Drawers -->
+    <!-- 1. Extensions Modal -->
+    <div id="modal-extensions" class="modal-overlay hidden">
+      <div class="modal-card modal-large">
+        <div class="modal-header">
+          <div class="modal-title">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5a2.5 2.5 0 0 0-5 0V5H4c-1.1 0-1.99.9-1.99 2v3.8H3.5c1.49 0 2.7 1.21 2.7 2.7s-1.21 2.7-2.7 2.7H2V20c0 1.1.9 2 2 2h3.8v-1.5c0-1.49 1.21-2.7 2.7-2.7 1.49 0 2.7 1.21 2.7 2.7V22H17c1.1 0 2-.9 2-2v-4h1.5a2.5 2.5 0 0 0 0-5z"></path></svg>
+            <span>Управление расширениями</span>
+          </div>
+          <div class="modal-actions">
+            <button id="btn-install-crx" class="btn btn-secondary">📁 Установить .CRX / .ZIP</button>
+            <button id="btn-install-dir" class="btn btn-primary">📂 Установить папку</button>
+            <button class="modal-close-btn" data-close="modal-extensions">✕</button>
+          </div>
+        </div>
+        <div class="modal-body">
+          <!-- Web Store Online Quick Install Bar -->
+          <div class="webstore-installer-bar">
+            <div class="webstore-input-row">
+              <input type="text" id="webstore-ext-input" class="form-input" placeholder="Вставьте ссылку из Chrome Web Store или 32-значный ID (например: gebbhagfogifgggkldgodflihgfeippi)...">
+              <button id="btn-install-webstore" class="btn btn-primary">⚡ Установить онлайн</button>
+              <button id="btn-open-webstore" class="btn btn-secondary" title="Открыть интернет-магазин Chrome в новой вкладке">🌐 Открыть Chrome Web Store</button>
+            </div>
+            <div class="webstore-hint">Поддерживается любая ссылка с <code>chromewebstore.google.com</code> или ID расширения</div>
+          </div>
+
+          <!-- Popular Extensions 1-Click Catalog -->
+          <div class="section-title">🔥 Популярные расширения (быстрая установка в 1 клик)</div>
+          <div class="popular-extensions-grid">
+            <div class="popular-ext-card" data-id="gebbhagfogifgggkldgodflihgfeippi">
+              <div class="popular-ext-icon">👎</div>
+              <div class="popular-ext-info">
+                <div class="popular-ext-name">Return YouTube Dislike</div>
+                <div class="popular-ext-desc">Возвращает отображение дизлайков под видео на YouTube</div>
+              </div>
+              <button class="btn btn-sm btn-outline btn-install-popular" data-id="gebbhagfogifgggkldgodflihgfeippi">Установить</button>
+            </div>
+
+            <div class="popular-ext-card" data-id="cjpalhdlnbpafiamejdnhcphjbkeiagm">
+              <div class="popular-ext-icon">🛡️</div>
+              <div class="popular-ext-info">
+                <div class="popular-ext-name">uBlock Origin</div>
+                <div class="popular-ext-desc">Легковесный и мощный блокировщик рекламы и трекеров</div>
+              </div>
+              <button class="btn btn-sm btn-outline btn-install-popular" data-id="cjpalhdlnbpafiamejdnhcphjbkeiagm">Установить</button>
+            </div>
+
+            <div class="popular-ext-card" data-id="eimadpbcbfnmbkopoojfekhnkhdbieeh">
+              <div class="popular-ext-icon">🌙</div>
+              <div class="popular-ext-info">
+                <div class="popular-ext-name">Dark Reader</div>
+                <div class="popular-ext-desc">Глубокая тёмная тема с гибкой настройкой для всех веб-сайтов</div>
+              </div>
+              <button class="btn btn-sm btn-outline btn-install-popular" data-id="eimadpbcbfnmbkopoojfekhnkhdbieeh">Установить</button>
+            </div>
+
+            <div class="popular-ext-card" data-id="mnjggcdmjocbbbhaepdhchncahnbgone">
+              <div class="popular-ext-icon">⏩</div>
+              <div class="popular-ext-info">
+                <div class="popular-ext-name">SponsorBlock</div>
+                <div class="popular-ext-desc">Автопропуск спонсорских интеграций и заставок на YouTube</div>
+              </div>
+              <button class="btn btn-sm btn-outline btn-install-popular" data-id="mnjggcdmjocbbbhaepdhchncahnbgone">Установить</button>
+            </div>
+
+            <div class="popular-ext-card" data-id="mpbjkejclgfgadiemmefgebjfooflfhl">
+              <div class="popular-ext-icon">🤖</div>
+              <div class="popular-ext-info">
+                <div class="popular-ext-name">Buster: Captcha Solver</div>
+                <div class="popular-ext-desc">Автоматическое решение аудио-капч reCAPTCHA в один клик</div>
+              </div>
+              <button class="btn btn-sm btn-outline btn-install-popular" data-id="mpbjkejclgfgadiemmefgebjfooflfhl">Установить</button>
+            </div>
+
+            <div class="popular-ext-card" data-id="aapbdbbgjfljicjaemijdcncaikapkbm">
+              <div class="popular-ext-icon">🌐</div>
+              <div class="popular-ext-info">
+                <div class="popular-ext-name">Google Переводчик</div>
+                <div class="popular-ext-desc">Быстрый перевод страниц и выделенного фрагмента текста</div>
+              </div>
+              <button class="btn btn-sm btn-outline btn-install-popular" data-id="aapbdbbgjfljicjaemijdcncaikapkbm">Установить</button>
+            </div>
+          </div>
+
+          <div class="section-header-row">
+            <div class="section-title">Установленные расширения <span id="extensions-count-badge" class="badge">0</span></div>
+            <input type="text" id="extensions-search-input" class="form-input form-input-sm" placeholder="🔍 Поиск среди установленных...">
+          </div>
+          <div id="extensions-grid" class="extensions-grid">
+            <!-- Extensions cards rendered dynamically -->
+          </div>
+
+          <div class="section-title" style="margin-top: 20px;">Ручная установка из файла</div>
+          <div class="drop-zone" id="extension-drop-zone">
+            <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="1.5" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            <p>Перетащите сюда файл расширения (<strong>.crx</strong>, <strong>.zip</strong>) или распакованную папку</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Settings Modal with Dedicated Tabs -->
+    <div id="modal-settings" class="modal-overlay hidden">
+      <div class="modal-card modal-large">
+        <div class="modal-header">
+          <div class="modal-title">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            <span>Настройки браузера</span>
+          </div>
+          <button class="modal-close-btn" data-close="modal-settings">✕</button>
+        </div>
+
+        <!-- Settings Navigation Tabs -->
+        <div class="settings-nav-tabs">
+          <button class="settings-nav-tab active" data-tab="general" title="Основные настройки">
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            <span>Основные</span>
+          </button>
+          <button class="settings-nav-tab" data-tab="shortcuts" title="Горячие клавиши (Shortcuts)">
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="6" y1="8" x2="6.01" y2="8"></line><line x1="10" y1="8" x2="10.01" y2="8"></line><line x1="14" y1="8" x2="14.01" y2="8"></line><line x1="18" y1="8" x2="18.01" y2="8"></line><line x1="6" y1="12" x2="6.01" y2="12"></line><line x1="10" y1="12" x2="10.01" y2="12"></line><line x1="14" y1="12" x2="14.01" y2="12"></line><line x1="18" y1="12" x2="18.01" y2="12"></line><line x1="8" y1="16" x2="16" y2="16"></line></svg>
+            <span>Горячие клавиши</span>
+          </button>
+          <button class="settings-nav-tab" data-tab="shield" title="Блокировщик рекламы Shield">
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            <span>Shield</span>
+          </button>
+          <button class="settings-nav-tab" data-tab="privacy" title="Очистка кэша и данных">
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            <span>Очистка данных</span>
+          </button>
+          <button class="settings-nav-tab" data-tab="updates" title="Проверка и установка обновлений">
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+            <span>Обновления</span>
+            <span id="tab-update-dot" class="tab-update-dot hidden"></span>
+          </button>
+        </div>
+
+        <div class="modal-body settings-body">
+          <!-- Tab 1: General Settings -->
+          <div id="settings-tab-general" class="settings-tab-pane active">
+            <div class="setting-group">
+              <h3>🌐 Браузер по умолчанию</h3>
+              <div class="setting-item">
+                <div>
+                  <div class="setting-label">Использовать Black hole Browser как основной браузер</div>
+                  <div id="default-browser-status" class="setting-desc">Открывать веб-страницы и ссылки (HTTP/HTTPS) в Black hole Browser</div>
+                </div>
+                <button id="btn-set-default-browser" class="btn btn-primary">Сделать по умолчанию</button>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <h3>⚡ Ускорение YouTube (DPI Fix)</h3>
+              <div class="setting-item">
+                <div>
+                  <div class="setting-label">Встроенный обход замедления YouTube</div>
+                  <div class="setting-desc">Автоматический обход ограничений скорости и блокировок YouTube в РФ. Видео в 1080p/4K воспроизводятся мгновенно и без зависаний, без VPN и сторонних программ</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="setting-dpi-bypass-toggle" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <h3>🎬 Picture-in-Picture Pro (Плавающее видео)</h3>
+              <div class="setting-item">
+                <div>
+                  <div class="setting-label">Автоматический PiP при смене вкладки</div>
+                  <div class="setting-desc">Если воспроизводится видео, автоматически открывать его в плавающем мини-плеере при уходе на другую вкладку, и возвращать обратно при возврате</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="setting-pip-auto-toggle" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="setting-item">
+                <div>
+                  <div class="setting-label">Плавающая кнопка PiP на видео</div>
+                  <div class="setting-desc">Отображать аккуратную кнопку выноса в мини-плеер при наведении курсора на видео</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="setting-pip-button-toggle" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="setting-item">
+                <div>
+                  <div class="setting-label">Шаг перемотки в окне PiP</div>
+                  <div class="setting-desc">Интервал перемотки кнопками ±сек на панели мини-плеера</div>
+                </div>
+                <select id="setting-pip-seek-step" class="form-select">
+                  <option value="5">5 секунд</option>
+                  <option value="10" selected>10 секунд (рекомендуется)</option>
+                  <option value="15">15 секунд</option>
+                  <option value="30">30 секунд</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <h3>Поиск и навигация</h3>
+              <div class="setting-item">
+                <div>
+                  <div class="setting-label">Поисковая система по умолчанию</div>
+                  <div class="setting-desc">Используется при поиске через адресную строку (Omnibox)</div>
+                </div>
+                <select id="setting-search-engine" class="form-select">
+                  <option value="google">Google</option>
+                  <option value="yandex">Яндекс</option>
+                  <option value="duckduckgo">DuckDuckGo</option>
+                  <option value="bing">Bing</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <h3>⚡ Оптимизация и память (Tab Hibernation)</h3>
+              <div class="setting-item">
+                <div>
+                  <div class="setting-label">Экономия оперативной памяти</div>
+                  <div class="setting-desc">Выгружать фоновые неактивные вкладки из RAM (освобождает до 80% памяти)</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="setting-tab-sleep-toggle" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="setting-item">
+                <div>
+                  <div class="setting-label">Время до усыпления неактивной вкладки</div>
+                  <div class="setting-desc">Через сколько минут неактивности переводить вкладку в сон</div>
+                </div>
+                <select id="setting-tab-sleep-minutes" class="form-select">
+                  <option value="5">5 минут</option>
+                  <option value="10" selected>10 минут</option>
+                  <option value="20">20 минут</option>
+                  <option value="30">30 минут</option>
+                  <option value="60">1 час</option>
+                </select>
+              </div>
+
+              <div class="setting-item">
+                <div>
+                  <div class="setting-label">Аппаратное ускорение GPU</div>
+                  <div class="setting-desc">Zero-copy растеризация и прямое ускорение графики для 60/120 FPS</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="setting-gpu-toggle" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="setting-item">
+                <div>
+                  <div class="setting-label">🎮 Игровой режим и приоритет CPU (Game Booster)</div>
+                  <div class="setting-desc">Автоматически снижает нагрузку на CPU/GPU при сворачивании или работе в фоне. Позволяет играть в любые игры с максимальным FPS, пока в фоне играет музыка или видео без задержек и микрофризов.</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="setting-game-optimization-toggle" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <h3>Интерфейс и оформление</h3>
+              <div class="setting-item">
+                <div>
+                  <div class="setting-label">Тема оформления браузера</div>
+                  <div class="setting-desc">Выберите тёмную, светлую или системную тему для верхней панели и окон</div>
+                </div>
+                <select id="setting-theme-select" class="form-select">
+                  <option value="dark">🌙 Тёмная (по умолчанию)</option>
+                  <option value="light">☀️ Светлая</option>
+                  <option value="system">💻 Системная (как в Windows)</option>
+                </select>
+              </div>
+
+              <div class="setting-item">
+                <div>
+                  <div class="setting-label">Цвет неоновой подсветки</div>
+                  <div class="setting-desc">Глобальный цвет неонового акцента: активные вкладки, кнопки, фокус и PiP-плеер</div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div class="settings-neon-presets" id="settings-neon-presets">
+                    <button type="button" class="settings-neon-dot active" data-color="#a855f7" title="Фиолетовый киберпанк" style="background: #a855f7;"></button>
+                    <button type="button" class="settings-neon-dot" data-color="#00f0ff" title="Неоновый циан" style="background: #00f0ff;"></button>
+                    <button type="button" class="settings-neon-dot" data-color="#00ff66" title="Матрица / Изумруд" style="background: #00ff66;"></button>
+                    <button type="button" class="settings-neon-dot" data-color="#ff003c" title="Неоновый рубин" style="background: #ff003c;"></button>
+                    <button type="button" class="settings-neon-dot" data-color="#ff007f" title="Сакура / Хот пинк" style="background: #ff007f;"></button>
+                    <button type="button" class="settings-neon-dot" data-color="#ff8800" title="Солнечный янтарь" style="background: #ff8800;"></button>
+                    <button type="button" class="settings-neon-dot" data-color="#00a8ff" title="Электрик блю" style="background: #00a8ff;"></button>
+                    <button type="button" class="settings-neon-dot" data-color="#ffe600" title="Кибер золото" style="background: #ffe600;"></button>
+                  </div>
+                  <input type="color" id="settings-neon-color-picker" value="#a855f7" class="settings-neon-color-picker" title="Произвольный цвет">
+                </div>
+              </div>
+
+              <div class="setting-item">
+                <div>
+                  <div class="setting-label">Фон главной страницы (New Tab)</div>
+                  <div class="setting-desc" id="settings-bg-summary">Кастомный фон, регулировка затемнения, кадрирование и размытие</div>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <button type="button" id="btn-settings-select-bg" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;">Выбрать фото...</button>
+                  <button type="button" id="btn-settings-reset-bg" class="btn btn-secondary" style="font-size: 12px; padding: 6px 10px;">Сбросить</button>
+                </div>
+              </div>
+
+              <div class="setting-item">
+                <div>
+                  <div class="setting-label">Адаптивная тёмная тема для сайтов</div>
+                  <div class="setting-desc">Передавать веб-страницам запрос на тёмное оформление (prefers-color-scheme). Отключите для идеальной совместимости с Dark Reader без конфликтов стилей и двойного затемнения.</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="setting-web-dark-toggle" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="setting-item">
+                <div>
+                  <div class="setting-label">Панель закладок</div>
+                  <div class="setting-desc">Отображать панель быстрого доступа к закладкам под строкой поиска</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="setting-bookmarks-toggle" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="setting-item">
+                <div>
+                  <div class="setting-label">Вертикальные вкладки</div>
+                  <div class="setting-desc">Отображать панель вкладок вертикально с левой стороны экрана (Ctrl+Shift+V)</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="setting-vertical-tabs-toggle">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="setting-item" id="setting-vertical-tabs-collapsed-row">
+                <div>
+                  <div class="setting-label">Компактный вид вертикальных вкладок</div>
+                  <div class="setting-desc">Сворачивать боковую панель до иконок, оставляя максимум места веб-странице</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="setting-vertical-tabs-collapsed-toggle">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="setting-item">
+                <div>
+                  <div class="setting-label">Восстанавливать вкладки при запуске</div>
+                  <div class="setting-desc">Открывать предыдущую сессию с сохраненными вкладками</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="setting-restore-session-toggle" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="setting-item">
+                <div>
+                  <div class="setting-label">При открытии браузера открывать новую вкладку</div>
+                  <div class="setting-desc">Всегда открывать или активировать новую вкладку при старте. Если среди сохраненных вкладок уже есть новая вкладка, браузер откроется сразу с неё</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="setting-open-new-tab-toggle" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="setting-item">
+                <div>
+                  <div class="setting-label">Затенение экрана при открытии панелей (Загрузки и История)</div>
+                  <div class="setting-desc">Плавное затемнение веб-страницы при вызове компактных всплывающих панелей в правом верхнем углу</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="setting-bubble-dimming-toggle" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="setting-item" id="setting-bubble-dimming-opacity-item">
+                <div style="flex: 1; min-width: 220px;">
+                  <div class="setting-label">Сила затенения веб-страницы</div>
+                  <div class="setting-desc">Плавная регулировка уровня затемнения фона под всплывающими окнами (страница остаётся живой и интерактивной)</div>
+                </div>
+                <div class="dimming-slider-wrapper">
+                  <span class="dimming-slider-badge" id="setting-bubble-dimming-opacity-badge">35%</span>
+                  <input type="range" id="setting-bubble-dimming-opacity-range" class="dimming-range-slider" min="0" max="100" step="1" value="35">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 2: Shortcuts & Hotkeys Manager -->
+          <div id="settings-tab-shortcuts" class="settings-tab-pane">
+            <div class="shortcuts-header-bar">
+              <div class="shortcuts-search-wrap">
+                <input type="text" id="shortcuts-search-input" class="form-input form-input-sm" placeholder="🔍 Поиск горячих клавиш или функций...">
+              </div>
+              <div class="shortcuts-filter-pills">
+                <button class="filter-pill active" data-filter="all">Все</button>
+                <button class="filter-pill" data-filter="tabs">Вкладки</button>
+                <button class="filter-pill" data-filter="nav">Навигация</button>
+                <button class="filter-pill" data-filter="tools">Инструменты</button>
+              </div>
+              <button id="btn-reset-shortcuts" class="btn btn-secondary btn-sm" title="Вернуть стандартные комбинации клавиш">↺ Сбросить все</button>
+            </div>
+
+            <div class="shortcuts-hint-box">
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+              <span>Нажмите на клавишу для изменения комбинации. Используйте переключатель справа, чтобы <strong>включить или полностью отключить</strong> горячую клавишу.</span>
+            </div>
+
+            <div id="shortcuts-container" class="shortcuts-container">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Tab 3: Shield & AdBlock -->
+          <div id="settings-tab-shield" class="settings-tab-pane">
+            <div class="setting-group">
+              <h3>🛡️ Встроенный блокировщик рекламы (Black hole Shield)</h3>
+              <div class="setting-item">
+                <div>
+                  <div class="setting-label">Встроенный блокировщик рекламы</div>
+                  <div class="setting-desc">Блокирует баннеры, всплывающие окна, тизеры, рекламные сети и трекеры слежки</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="setting-adblock-toggle" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="setting-item">
+                <div>
+                  <div class="setting-label">Тотальное вырезание видеорекламы (Deep Ad-Destroyer)</div>
+                  <div class="setting-desc">Вырезает рекламу в видеоплеерах, стримингах, Kodik, Alloha, Sibnet и YouTube без первого кадра и таймеров</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="setting-yt-adblock-toggle" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="setting-item">
+                <div>
+                  <div class="setting-label">Статистика блокировки</div>
+                  <div class="setting-desc" id="setting-adblock-stats-text">Всего заблокировано элементов: 0</div>
+                </div>
+                <button id="btn-reset-adblock-stats" class="btn btn-secondary">Сбросить счетчик</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 4: Privacy & Cache -->
+          <div id="settings-tab-privacy" class="settings-tab-pane">
+            <div class="setting-group">
+              <h3>Очистка и конфиденциальность</h3>
+              <div class="setting-item">
+                <div>
+                  <div class="setting-label">Очистить кэш и временные файлы</div>
+                  <div class="setting-desc">Удалить кэш браузера, сервисные воркеры и данные хранилища</div>
+                </div>
+                <button id="btn-clear-cache" class="btn btn-danger">Очистить кэш</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 5: Updates & About -->
+          <div id="settings-tab-updates" class="settings-tab-pane">
+            <div class="setting-group">
+              <h3>🚀 О браузере и статус обновления</h3>
+              <div class="update-about-card">
+                <div class="update-app-info">
+                  <div class="update-app-avatar">🪐</div>
+                  <div class="update-app-meta">
+                    <div class="update-app-name">Black hole Browser</div>
+                    <div class="update-app-version">Версия: <span id="settings-current-version" class="text-neon-cyan">v1.15.0</span> (64-bit Windows)</div>
+                    <div class="update-status-line" id="settings-update-status">
+                      <span class="status-indicator-dot" id="settings-status-indicator"></span>
+                      <span id="settings-update-status-text">Проверка наличия обновлений...</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="update-check-action">
+                  <button id="btn-check-updates-now" class="btn btn-primary">
+                    <svg id="icon-check-spin" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                    <span>Проверить сейчас</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Inline Available Update Details Card (Shown if an update is detected) -->
+              <div id="settings-update-available-card" class="update-available-card hidden">
+                <div class="update-avail-header">
+                  <div class="update-avail-badge">ДОСТУПНА НОВАЯ ВЕРСИЯ</div>
+                  <div class="update-avail-version" id="settings-avail-version">v1.14.0</div>
+                </div>
+                <div class="update-avail-changelog" id="settings-avail-changelog">
+                  <!-- Changelog bullets rendered here -->
+                </div>
+                <!-- Progress bar inside settings -->
+                <div id="settings-avail-progress-box" class="update-progress-container hidden">
+                  <div class="update-progress-info">
+                    <span id="settings-avail-progress-text">Загрузка...</span>
+                    <span id="settings-avail-progress-percent">0%</span>
+                  </div>
+                  <div class="update-progress-track">
+                    <div class="update-progress-bar" id="settings-avail-progress-bar" style="width: 0%;"></div>
+                  </div>
+                </div>
+                <div class="update-avail-actions">
+                  <button id="btn-settings-update-now" class="btn btn-primary btn-glow">📥 Скачать и обновить</button>
+                  <button id="btn-settings-open-page" class="btn btn-secondary hidden">🌐 Канал / Страница</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <h3>⚙️ Параметры обновлений</h3>
+              <div class="setting-item">
+                <div>
+                  <div class="setting-label">Автоматически проверять обновления</div>
+                  <div class="setting-desc">Уведомлять при запуске браузера и в фоне при выходе новых версий</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="toggle-auto-check-updates" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="setting-item">
+                <div style="flex: 1; margin-right: 15px;">
+                  <div class="setting-label">URL источника обновлений (JSON манифест)</div>
+                  <div class="setting-desc">Адрес манифеста версий для устройств и серверов дистрибуции</div>
+                  <input type="text" id="input-update-feed-url" class="setting-input-text" style="width: 100%; margin-top: 8px; font-family: monospace; font-size: 11.5px;" spellcheck="false" placeholder="https://raw.githubusercontent.com/.../version.json">
+                </div>
+                <div style="display: flex; gap: 8px; align-self: flex-end;">
+                  <button id="btn-reset-update-feed" class="btn btn-secondary btn-sm" title="Сбросить к адресу по умолчанию">По умолчанию</button>
+                  <button id="btn-save-update-feed" class="btn btn-secondary btn-sm">Сохранить</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer settings-footer">
+          <div class="settings-credits" id="settings-credits" title="✨">Black hole Browser v1.15.0 • made by Karasu x Gemini x Claude Opus 4.6 (Antigravity)</div>
+          <a href="https://github.com/Karasu287/Black-hole-browser-" target="_blank" class="settings-github-link" title="Перейти в репозиторий проекта на GitHub">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+            <span>GitHub</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Downloads Modal -->
+    <div id="modal-downloads" class="modal-overlay hidden">
+      <div class="modal-card modal-large">
+        <div class="modal-header">
+          <div class="modal-title">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <span>История загрузок</span>
+          </div>
+          <div class="modal-actions">
+            <button id="btn-open-downloads-folder" class="btn btn-secondary">📂 Папка загрузок</button>
+            <button id="btn-clear-downloads" class="btn btn-danger">Очистить список</button>
+            <button class="modal-close-btn" data-close="modal-downloads">✕</button>
+          </div>
+        </div>
+        <div class="modal-body">
+          <input type="text" id="downloads-search-input" class="form-input" placeholder="Поиск по загруженным файлам...">
+          <div id="downloads-list" class="downloads-list">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. History Modal -->
+    <div id="modal-history" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <span>История посещений</span>
+          </div>
+          <div class="modal-actions">
+            <button id="btn-clear-history" class="btn btn-danger">Очистить историю</button>
+            <button class="modal-close-btn" data-close="modal-history">✕</button>
+          </div>
+        </div>
+        <div class="modal-body">
+          <input type="text" id="history-search-input" class="form-input" placeholder="Поиск по истории...">
+          <div id="history-list" class="history-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Bookmarks Modal -->
+    <div id="modal-bookmarks" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+            <span>Управление закладками</span>
+          </div>
+          <button class="modal-close-btn" data-close="modal-bookmarks">✕</button>
+        </div>
+        <div class="modal-body">
+          <div id="bookmarks-full-list" class="bookmarks-full-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Memory Saver Stats Modal -->
+    <div id="modal-memory" class="modal-overlay hidden">
+      <div class="modal-card modal-small">
+        <div class="modal-header">
+          <div class="modal-title">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="#10b981" stroke-width="2" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
+            <span>Мониторинг оптимизации</span>
+          </div>
+          <button class="modal-close-btn" data-close="modal-memory">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="stat-card">
+            <div class="stat-value text-emerald" id="stat-mem-saved">0 МБ</div>
+            <div class="stat-title">Сэкономлено оперативной памяти</div>
+          </div>
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="stat-value" id="stat-active-tabs">1</div>
+              <div class="stat-title">Активных вкладок</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value text-indigo" id="stat-sleeping-tabs">0</div>
+              <div class="stat-title">В спящем режиме 💤</div>
+            </div>
+          </div>
+          <p class="stat-hint">Вкладки, которые не используются, автоматически выгружаются из RAM и мгновенно просыпаются при клике.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. Password Manager Modal -->
+    <div id="modal-passwords" class="modal-overlay hidden">
+      <div class="modal-card modal-large">
+        <div class="modal-header">
+          <div class="modal-title">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <span>Сохранённые пароли и логины</span>
+          </div>
+          <div class="modal-actions">
+            <button id="btn-import-passwords-modal" class="btn btn-secondary">📥 Импорт из браузера</button>
+            <button id="btn-export-passwords" class="btn btn-secondary" title="Экспорт паролей в CSV">📤 Экспорт</button>
+            <button id="btn-add-password-manual" class="btn btn-primary">+ Добавить</button>
+            <button class="modal-close-btn" data-close="modal-passwords">✕</button>
+          </div>
+        </div>
+        <div class="modal-body">
+          <input type="text" id="passwords-search-input" class="form-input" placeholder="Поиск по сайту или логину...">
+          <div id="passwords-list" class="passwords-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9. Import Passwords Modal -->
+    <div id="modal-import-passwords" class="modal-overlay hidden">
+      <div class="modal-card modal-large">
+        <div class="modal-header">
+          <div class="modal-title">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <span>Перенос паролей из других браузеров</span>
+          </div>
+          <button class="modal-close-btn" data-close="modal-import-passwords">✕</button>
+        </div>
+        <div class="modal-body">
+          <!-- Guide / Supported Browsers -->
+          <div class="import-guide-box">
+            <div class="import-guide-title">Как экспортировать пароли из вашего браузера:</div>
+            <div class="browser-guide-badges">
+              <div class="browser-badge active" data-guide="chrome">
+                <span class="browser-icon">🌐</span>
+                <span>Google Chrome</span>
+              </div>
+              <div class="browser-badge" data-guide="yandex">
+                <span class="browser-icon">🔴</span>
+                <span>Яндекс Браузер</span>
+              </div>
+              <div class="browser-badge" data-guide="edge">
+                <span class="browser-icon">🌊</span>
+                <span>Microsoft Edge</span>
+              </div>
+              <div class="browser-badge" data-guide="firefox">
+                <span class="browser-icon">🦊</span>
+                <span>Mozilla Firefox</span>
+              </div>
+              <div class="browser-badge" data-guide="opera">
+                <span class="browser-icon">⭕</span>
+                <span>Opera / GX</span>
+              </div>
+              <div class="browser-badge" data-guide="other">
+                <span class="browser-icon">🛡️</span>
+                <span>Bitwarden / др.</span>
+              </div>
+            </div>
+            <div id="guide-step-instruction" class="guide-instruction-text">
+              <strong>Google Chrome:</strong> Меню ➔ Настройки ➔ Автозаполнение и пароли ➔ Менеджер паролей ➔ вкладка «Настройки» ➔ пункт «Экспорт паролей» ➔ скачайте файл <code>.csv</code>.
+            </div>
+          </div>
+
+          <!-- Upload Drop Zone -->
+          <div class="drop-zone" id="password-drop-zone">
+            <svg viewBox="0 0 24 24" width="36" height="36" stroke="currentColor" stroke-width="1.5" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            <div>
+              <p style="font-size:14px; font-weight:600; color:var(--text-primary);">Перетащите файл с паролями (.CSV или .JSON)</p>
+              <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">Поддерживаются любые файлы экспорта Chrome, Яндекс, Edge, Firefox, Opera и Bitwarden</p>
+            </div>
+            <button id="btn-select-password-file" class="btn btn-primary" style="margin-top:6px;">Выбрать файл на диске</button>
+          </div>
+
+          <!-- Preview & Confirm Area -->
+          <div id="import-preview-area" class="import-preview-area hidden">
+            <div class="import-preview-header">
+              <div class="preview-badge" id="preview-count-badge">Найдено аккаунтов: 0</div>
+              <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-secondary); cursor:pointer;">
+                <input type="checkbox" id="import-overwrite-toggle" checked>
+                <span>Обновлять пароли при совпадении логина</span>
+              </label>
+            </div>
+
+            <div class="import-preview-table-container">
+              <table class="import-preview-table">
+                <thead>
+                  <tr>
+                    <th>Сайт / Домен</th>
+                    <th>Логин / Email</th>
+                    <th>Пароль</th>
+                  </tr>
+                </thead>
+                <tbody id="import-preview-tbody"></tbody>
+              </table>
+            </div>
+
+            <div class="import-actions-row">
+              <button id="btn-cancel-import" class="btn btn-secondary">Отмена</button>
+              <button id="btn-confirm-import" class="btn btn-primary">✅ Импортировать аккаунты</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. Add Password Modal -->
+    <div id="modal-add-password" class="modal-overlay hidden">
+      <div class="modal-card modal-small">
+        <div class="modal-header">
+          <div class="modal-title">
+            <span>Добавить аккаунт</span>
+          </div>
+          <button class="modal-close-btn" data-close="modal-add-password">✕</button>
+        </div>
+        <div class="modal-body">
+          <div>
+            <label class="setting-label">Адрес сайта (URL или домен)</label>
+            <input type="text" id="add-pwd-origin" class="form-input" style="width:100%; margin-top:4px;" placeholder="https://github.com">
+          </div>
+          <div>
+            <label class="setting-label">Логин / Email</label>
+            <input type="text" id="add-pwd-username" class="form-input" style="width:100%; margin-top:4px;" placeholder="my_username">
+          </div>
+          <div>
+            <label class="setting-label">Пароль</label>
+            <input type="password" id="add-pwd-password" class="form-input" style="width:100%; margin-top:4px;" placeholder="••••••••">
+          </div>
+          <button id="btn-save-new-password" class="btn btn-primary" style="margin-top:10px; width:100%;">Сохранить</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. Password Save Prompt Modal -->
+    <div id="modal-save-password-prompt" class="modal-overlay hidden">
+      <div class="modal-card modal-small">
+        <div class="modal-header">
+          <div class="modal-title">
+            <span>🔑 Сохранить пароль?</span>
+          </div>
+          <button class="modal-close-btn" data-close="modal-save-password-prompt">✕</button>
+        </div>
+        <div class="modal-body">
+          <div style="font-size:12px; color:var(--text-muted); margin-bottom:6px;" id="prompt-origin-text">example.com</div>
+          <div class="form-group">
+            <label class="setting-label">Логин / Email</label>
+            <input type="text" id="prompt-username-input" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="setting-label">Пароль</label>
+            <input type="password" id="prompt-password-input" class="form-input">
+          </div>
+          <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:10px;">
+            <button id="btn-prompt-never" class="btn btn-secondary">Не сейчас</button>
+            <button id="btn-prompt-save" class="btn btn-primary">Сохранить</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9. Tab Group (Folder) Modal -->
+    <div id="modal-tab-group" class="modal-overlay hidden">
+      <div class="modal-card modal-small">
+        <div class="modal-header">
+          <div class="modal-title">
+            <span id="tab-group-modal-title">📁 Папка с вкладками</span>
+          </div>
+          <button class="modal-close-btn" data-close="modal-tab-group">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="setting-label">Название папки / группы</label>
+            <input type="text" id="tab-group-name-input" class="form-input" style="width:100%; margin-top:4px;" placeholder="например, Работа, YouTube, Учёба" autocomplete="off">
+          </div>
+          <div class="form-group" style="margin-top:12px;">
+            <label class="setting-label">Цвет папки</label>
+            <div class="tab-group-color-picker" id="tab-group-color-picker">
+              <button type="button" class="color-dot active" data-color="purple" style="--dot-color: #a855f7;"></button>
+              <button type="button" class="color-dot" data-color="blue" style="--dot-color: #3b82f6;"></button>
+              <button type="button" class="color-dot" data-color="cyan" style="--dot-color: #06b6d4;"></button>
+              <button type="button" class="color-dot" data-color="green" style="--dot-color: #10b981;"></button>
+              <button type="button" class="color-dot" data-color="yellow" style="--dot-color: #eab308;"></button>
+              <button type="button" class="color-dot" data-color="orange" style="--dot-color: #f97316;"></button>
+              <button type="button" class="color-dot" data-color="red" style="--dot-color: #ef4444;"></button>
+              <button type="button" class="color-dot" data-color="pink" style="--dot-color: #ec4899;"></button>
+            </div>
+          </div>
+          <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
+            <button id="btn-tab-group-cancel" class="btn btn-secondary">Отмена</button>
+            <button id="btn-tab-group-save" class="btn btn-primary">Сохранить</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10. Update Available Notification Modal -->
+    <div id="modal-update-prompt" class="modal-overlay hidden">
+      <div class="modal-card modal-update-card">
+        <div class="modal-header">
+          <div class="modal-title">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+            <span>Доступно обновление Black Hole Browser</span>
+          </div>
+          <button class="modal-close-btn" id="btn-update-prompt-close">✕</button>
+        </div>
+        <div class="modal-body update-prompt-body">
+          <div class="update-header-banner">
+            <div class="update-rocket-icon">🚀</div>
+            <div class="update-header-text">
+              <div class="update-app-title" id="update-prompt-title">Новая версия готова к установке</div>
+              <div class="update-version-diff">
+                <span class="ver-curr" id="update-prompt-ver-curr">v1.15.0</span>
+                <span class="ver-arrow">➔</span>
+                <span class="ver-new" id="update-prompt-ver-new">v1.14.0</span>
+                <span class="ver-date" id="update-prompt-ver-date"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="update-section-title">Что нового в обновлении:</div>
+          <div class="update-changelog-container" id="update-prompt-changelog">
+            <!-- Dynamic changelog items -->
+          </div>
+
+          <!-- Download Progress Container -->
+          <div class="update-progress-container hidden" id="update-progress-container">
+            <div class="update-progress-info">
+              <span id="update-progress-status">Загрузка обновления...</span>
+              <span id="update-progress-percent">0%</span>
+            </div>
+            <div class="update-progress-track">
+              <div class="update-progress-bar" id="update-progress-bar" style="width: 0%;"></div>
+            </div>
+            <div class="update-progress-meta" id="update-progress-meta">0 МБ / 0 МБ (0 КБ/с)</div>
+          </div>
+        </div>
+        <div class="modal-footer update-prompt-footer">
+          <div class="update-footer-left">
+            <button class="btn btn-secondary btn-sm" id="btn-update-prompt-skip">Пропустить версию</button>
+            <button class="btn btn-secondary btn-sm hidden" id="btn-update-prompt-channel">🌐 Канал / Страница</button>
+          </div>
+          <div class="update-footer-right">
+            <button class="btn btn-secondary" id="btn-update-prompt-later">Напомнить позже</button>
+            <button class="btn btn-primary btn-glow" id="btn-update-prompt-action">📥 Скачать и обновить</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VirusTotal Download Completed Notification Toast -->
+  <div id="virustotal-prompt-toast" class="virustotal-prompt-toast hidden">
+    <div class="vt-toast-header">
+      <div class="vt-toast-title">
+        <span class="vt-shield-icon">🛡️</span>
+        <span>VirusTotal Scan</span>
+      </div>
+      <button id="vt-toast-close" class="vt-toast-close-btn" title="Закрыть">✕</button>
+    </div>
+    <div class="vt-toast-body">
+      <div class="vt-toast-filename" id="vt-toast-filename">Файл загружен</div>
+      <div class="vt-toast-subtitle">Загрузка завершена. Проверить файл на вирусы?</div>
+    </div>
+    <div class="vt-toast-actions">
+      <button id="vt-toast-scan-btn" class="vt-toast-btn vt-toast-scan-btn">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        <span>Проверить</span>
+      </button>
+      <button id="vt-toast-dismiss-btn" class="vt-toast-btn vt-toast-dismiss-btn">Закрыть</button>
+    </div>
+    <div class="vt-toast-progress-bar"><div id="vt-toast-progress-fill" class="vt-toast-progress-fill"></div></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
