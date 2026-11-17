@@ -2,6 +2,53 @@
 
 All notable changes, optimizations, and features across Black hole Browser releases.
 
+## [v1.15.0] — 2026-11-17
+
+### 🇬🇧 English: Wallpaper Engine Background Customization, Global Neon Accents & Universal PiP
+- **🖼️ Wallpaper Engine Style Background System**:
+  - Full support for custom wallpapers on the New Tab page (PNG, JPG, WEBP, GIF, BMP).
+  - Exact Wallpaper Engine alignment & scaling controls:
+    - ↔ Horizontal positioning slider (0%–100%)
+    - ↕ Vertical positioning slider (0%–100%)
+    - ⛶ Zoom & scaling slider (50%–250%) with focal-point origin
+    - ⇄ Horizontal flip/mirror checkbox
+    - 🖼️ 5 alignment modes: Free (Свободный), Cover (Заполнить), Contain (Вместить), Stretch (Растянуть), Tile (Замостить)
+  - Smooth background dimming overlay (0%–90%) and cinematic background blur (0–20px).
+- **⚡ Global Cyberpunk Neon Theme Engine**:
+  - 8 one-click presets: Black Hole Purple (#a855f7), Neon Cyan (#00f0ff), Matrix Green (#00ff66), Blood Red (#ff003c), Sakura Pink (#ff007f), Solar Amber (#ff8800), Electric Blue (#00a8ff), Cyber Gold (#ffe600).
+  - Custom Color Picker with instant live-preview across the entire browser (tabs, URL bar, PiP player, buttons, dialogs).
+- **🎬 Universal Picture-in-Picture (PiP)**:
+  - Extended floating top-center PiP button from YouTube to Twitch, Rutube, VK Video, Kinopoisk, and Dzen.
+  - PiP buttons inherit global neon accent colors and glow.
+- **🛠️ UI & Settings Polish**:
+  - Expanded settings modal to 820px with proportional tab distribution (`flex: 1 1 auto; min-width: max-content`).
+  - Fixed tab text clipping ("Горячие клавиши", "Очистка данных") and perfected Shield tab alignment.
+
+---
+
+### 🇷🇺 Русский: Кастомизация фона в стиле Wallpaper Engine, глобальная смена неона и универсальный PiP
+- **🖼️ Система кастомизации фона в духе Wallpaper Engine**:
+  - Установка любого собственного изображения на главную страницу (PNG, JPG, WEBP, GIF, BMP).
+  - Управление позиционированием и масштабированием точь-в-точь как в Wallpaper Engine:
+    - ↔ Ползунок смещения по горизонтали (0–100%)
+    - ↕ Ползунок смещения по вертикали (0–100%)
+    - ⛶ Ползунок масштабирования / зума (50–250%) с точкой фокуса
+    - ⇄ Чекбокс зеркального отражения фона по горизонтали
+    - 🖼️ 5 режимов выравнивания: Свободный, Заполнить, Вместить, Растянуть, Замостить (плитка)
+  - Плавное затенение фона (димминг 0–90%) и кинематографичное размытие (Blur 0–20px) для идеальной читаемости текста и закладок.
+- **⚡ Глобальная неоновая палитра браузера**:
+  - 8 готовых киберпанк/OLED пресетов в один клик: Фиолетовый, Неоновый циан, Матрица, Рубин, Сакура, Янтарь, Электрик блю, Кибер золото.
+  - Встроенный Color Picker для выбора любого произвольного HEX-оттенка.
+  - Мгновенное применение во всём интерфейсе: вкладки, кнопки, подсветка активного таба, обводки, фокус адресной строки и плавающий мини-плеер.
+- **🎬 Универсальная кнопка Picture-in-Picture (PiP)**:
+  - Аккуратная плавающая неоновая кнопка выноса в мини-плеер теперь доступна не только на YouTube, но и на Twitch, Rutube, VK Видео, Кинопоиске и Дзене.
+  - Кнопка выноса адаптируется под выбранный цвет неона браузера.
+- **🛠️ Полировка интерфейса и окно настроек**:
+  - Окно настроек расширено до 820px, внедрено пропорциональное распределение табов — надписи «Горячие клавиши» и «Очистка данных» больше не обрезаются.
+  - Значок и надпись Shield идеально отцентрированы по горизонтали и вертикали.
+
+---
+
 ## [v1.14.0] — 2026-11-08
 
 ### 🇬🇧 English: One-Click Auto-Updates, Cross-Window Tab Dragging, GitHub Integration & Compact Settings
