@@ -120,7 +120,12 @@ async function init() {
 
   loadExtensions();
   updatePerformanceStats();
-  setInterval(updatePerformanceStats, 10000);
+  setInterval(() => {
+    // Only poll performance stats if window is visible and settings modal is opened
+    if (!document.hidden && modalSettings && !modalSettings.classList.contains('hidden')) {
+      updatePerformanceStats();
+    }
+  }, 15000);
 
   // Listen for main process events
   window.electronAPI.onTabsUpdated((data) => {
