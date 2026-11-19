@@ -52,6 +52,15 @@ try {
   console.warn('Failed to expose internal electronAPI:', e);
 }
 
+// Shield: Block guest web pages from calling window.close() to kill tabs/browser
+try {
+  if (!window.opener) {
+    window.close = function() {
+      console.warn('[Black hole Shield] Blocked isolated window.close() call');
+    };
+  }
+} catch (e) {}
+
 // Neon theme sync for tabs and floating PiP
 function applyTabNeonColor(hexColor) {
   if (!hexColor || typeof hexColor !== 'string') return;
@@ -429,6 +438,14 @@ function initStealthAndAntiDetection() {
             return origQuery.apply(this, arguments);
           }, 'query');
         }
+
+        try {
+          if (!window.opener) {
+            window.close = function() {
+              console.warn('[Black hole Shield] Blocked main world window.close() call');
+            };
+          }
+        } catch (e) {}
       } catch (e) {}
     })();
   `;
@@ -904,10 +921,9 @@ function initYouTubeTheaterMode() {
         const STORAGE_KEY = 'eclipse_yt_theater_mode';
 
         try {
-          if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            localStorage.setItem('yt-dark-mode-pref', 'true');
-          } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-            localStorage.setItem('yt-dark-mode-pref', 'false');
+          const desired = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'true' : 'false';
+          if (localStorage.getItem('yt-dark-mode-pref') !== desired) {
+            localStorage.setItem('yt-dark-mode-pref', desired);
           }
         } catch (e) {}
 
@@ -1229,9 +1245,8 @@ function initPictureInPictureEngine() {
 
         registerPipMediaHandlers();
         setInterval(() => {
-          registerPipMediaHandlers();
           syncMediaSessionState();
-        }, 800);
+        }, 1000);
       }
 
       // Регулировка звука колесиком мыши над видео
@@ -1569,12 +1584,17 @@ function initPictureInPictureEngine() {
         setupYouTubeButton();
       });
       window.addEventListener('DOMContentLoaded', setupYouTubeButton);
+      let _pObsTimer = null;
       function startObserving() {
         const root = document.documentElement || document.body;
         if (root) {
           try {
             const pObs = new MutationObserver(() => {
-              setupYouTubeButton();
+              if (_pObsTimer) return;
+              _pObsTimer = setTimeout(() => {
+                _pObsTimer = null;
+                setupYouTubeButton();
+              }, 400);
             });
             pObs.observe(root, { childList: true, subtree: true });
           } catch (e) {}
