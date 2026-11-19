@@ -420,6 +420,10 @@ async function createWindow(options = {}) {
     }
   });
 
+  win.on('close', () => {
+    logCrash('WINDOW_CLOSE', `BrowserWindow ${win.id} close event fired`);
+  });
+
   win.on('closed', () => {
     vm.cleanUp();
     if (win === mainWindow) {
