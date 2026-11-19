@@ -546,7 +546,7 @@ class ViewManager {
         return { action: 'deny' };
       }
 
-      this.createTab({ url: trimmedUrl, active: disposition !== 'background-tab' });
+      this.createTab({ url: trimmedUrl, active: disposition !== 'background-tab', wasOpenedByScript: true });
       return { action: 'deny' };
     });
 
@@ -637,6 +637,21 @@ class ViewManager {
       return false;
     };
 
+    // CRITICAL: Block guest webpages from closing the browser window via window.close()
+    wc.on('close', (event) => {
+      if (event && typeof event.preventDefault === 'function') {
+        event.preventDefault();
+      }
+      console.log(`[Black hole Shield] Intercepted webContents close for tab ${tabId}`);
+      const tab = this.tabs.get(tabId);
+      if (tab && tab.wasOpenedByScript && this.tabs.size > 1) {
+        console.log(`[Black hole Shield] Closing script-opened tab ${tabId}`);
+        this.closeTab(tabId);
+      } else {
+        console.warn(`[Black hole Shield] Blocked guest page window.close() on tab ${tabId}`);
+      }
+    });
+
     wc.on('render-process-gone', (event, details) => {
       console.warn(`[Black hole Shield] Tab ${tabId} render process exited:`, details);
       const tab = this.tabs.get(tabId);
@@ -647,23 +662,21 @@ class ViewManager {
       // If tab was put to sleep intentionally (hibernation), do NOT treat as crash or reload
       if (tab.isSleeping) return;
 
-      if (details.reason === 'crashed' || details.reason === 'killed' || details.reason === 'abnormal-exit' || details.reason === 'oom') {
-        const now = Date.now();
-        tab._crashCount = (tab._crashCount || 0) + 1;
-        tab._lastCrashTime = now;
+      const now = Date.now();
+      tab._crashCount = (tab._crashCount || 0) + 1;
+      tab._lastCrashTime = now;
 
-        if (tab._crashCount <= 2) {
-          setTimeout(() => {
-            try {
-              if (tab && !tab.isSleeping && tab.view && tab.view.webContents && !tab.view.webContents.isDestroyed()) {
-                tab.view.webContents.reload();
-              }
-            } catch (e) {}
-          }, 400);
-        } else {
-          console.warn(`[Black hole Shield] Tab ${tabId} crashed multiple times. Putting to sleep to prevent browser crash.`);
-          this.hibernateTab(tabId);
-        }
+      if (tab._crashCount <= 2) {
+        setTimeout(() => {
+          try {
+            if (tab && !tab.isSleeping && tab.view && tab.view.webContents && !tab.view.webContents.isDestroyed()) {
+              tab.view.webContents.reload();
+            }
+          } catch (e) {}
+        }, 400);
+      } else {
+        console.warn(`[Black hole Shield] Tab ${tabId} exited multiple times. Putting to sleep to prevent browser crash.`);
+        this.hibernateTab(tabId);
       }
     });
 
@@ -1652,6 +1665,7 @@ class ViewManager {
       isSleeping: isSleeping,
       isPlayingAudio: false,
       lastActive: Date.now(),
+      wasOpenedByScript: Boolean(options.wasOpenedByScript),
       view
     };
 
@@ -1865,7 +1879,13 @@ class ViewManager {
     if (this.tabs.size === 0) {
       this.activeTabId = null;
       if (this.mainWindow && !this.mainWindow.isDestroyed()) {
-        const otherWins = BrowserWindow.getAllWindows().filter(w => !w.isDestroyed() && w !== this.mainWindow);
+        const otherWins = BrowserWindow.getAllWindows().filter(w =>
+          !w.isDestroyed() &&
+          w !== this.mainWindow &&
+          !w._isPopup &&
+          !w._isToast &&
+          Boolean(w._viewManager)
+        );
         if (otherWins.length > 0) {
           setTimeout(() => {
             try {
