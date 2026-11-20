@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Загрузки • Black hole</title>
+  <style>
+    :root {
+      --bg: #07080d;
+      --bg-gradient: radial-gradient(circle at 50% 0%, rgba(147, 51, 234, 0.1) 0%, rgba(7, 8, 13, 0.98) 60%, #07080d 100%);
+      --card-bg: rgba(18, 14, 28, 0.7);
+      --card-hover: rgba(28, 20, 48, 0.85);
+      --card-selected: rgba(168, 85, 247, 0.16);
+      --sidebar-bg: rgba(11, 10, 18, 0.85);
+      --border: rgba(168, 85, 247, 0.16);
+      --border-hover: rgba(192, 132, 252, 0.35);
+      --border-focus: #a855f7;
+      --accent: #a855f7;
+      --accent-light: #c084fc;
+      --accent-glow: rgba(168, 85, 247, 0.3);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --success: #10b981;
+      --blue: #60a5fa;
+    }
+
+    body.theme-light {
+      --bg: #f8fafc;
+      --bg-gradient: radial-gradient(circle at 50% 0%, rgba(147, 51, 234, 0.06) 0%, rgba(241, 245, 249, 0.98) 60%, #f8fafc 100%);
+      --card-bg: rgba(255, 255, 255, 0.9);
+      --card-hover: #f1f5f9;
+      --card-selected: rgba(147, 51, 234, 0.1);
+      --sidebar-bg: rgba(248, 250, 252, 0.9);
+      --border: #e2e8f0;
+      --border-hover: #cbd5e1;
+      --border-focus: #9333ea;
+      --accent: #9333ea;
+      --accent-light: #a855f7;
+      --accent-glow: rgba(147, 51, 234, 0.2);
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --text-dim: #94a3b8;
+      --danger: #dc2626;
+      --danger-hover: #b91c1c;
+      --success: #059669;
+      --blue: #2563eb;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg);
+      color: var(--text);
+      user-select: none;
+    }
+
+    body {
+      background-image: var(--bg-gradient);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(168, 85, 247, 0.2);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent);
+    }
+
+    /* App Layout */
+    .app-layout {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 270px;
+      height: 100%;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 20px 14px;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 6px 12px 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--accent), #4c1d95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 14px var(--accent-glow);
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .brand-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .nav-list {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      list-style: none;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-radius: 9px;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.12s ease, color 0.12s ease;
+      border: 1px solid transparent;
+    }
+
+    .nav-item:hover {
+      background: var(--card-hover);
+      color: var(--text);
+    }
+
+    .nav-item.active {
+      background: rgba(168, 85, 247, 0.15);
+      color: var(--accent-light);
+      border-color: var(--border);
+      font-weight: 600;
+    }
+
+    .nav-item-left {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .nav-badge {
+      font-size: 11px;
+      padding: 1px 6px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.07);
+      color: var(--text-muted);
+    }
+
+    .nav-item.active .nav-badge {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .sidebar-section-title {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-dim);
+      padding: 6px 8px 2px 8px;
+    }
+
+    .sidebar-stats {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .stat-val {
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .sidebar-footer {
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .btn-action {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--text);
+      transition: all 0.12s ease;
+    }
+
+    .btn-action:hover {
+      background: var(--card-hover);
+      border-color: var(--border-hover);
+    }
+
+    .btn-action.folder {
+      color: var(--accent-light);
+      background: rgba(168, 85, 247, 0.08);
+      border-color: rgba(168, 85, 247, 0.3);
+    }
+    .btn-action.folder:hover {
+      background: rgba(168, 85, 247, 0.18);
+    }
+
+    .btn-action.danger {
+      color: var(--danger);
+    }
+    .btn-action.danger:hover {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: var(--danger);
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: transparent;
+    }
+
+    /* Top Bar */
+    .top-header {
+      height: 64px;
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .search-wrapper {
+      flex: 1;
+      max-width: 540px;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      color: var(--text-dim);
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      height: 38px;
+      padding: 0 36px 0 38px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 13.5px;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    .search-input:focus {
+      border-color: var(--border-focus);
+      background: var(--card-hover);
+    }
+
+    .search-clear-btn {
+      position: absolute;
+      right: 10px;
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 14px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+    }
+    .search-clear-btn:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .stats-chip {
+      font-size: 12px;
+      color: var(--text-dim);
+      background: rgba(255, 255, 255, 0.04);
+      padding: 4px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    /* Content Area */
+    .downloads-scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 28px 40px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      content-visibility: auto;
+    }
+
+    .date-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .date-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 4px 2px 4px;
+    }
+
+    .date-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .date-count {
+      font-size: 11px;
+      padding: 1px 6px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-dim);
+    }
+
+    .items-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .download-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 14px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: grab;
+      contain: layout style paint;
+      transition: background 0.1s ease, border-color 0.1s ease;
+    }
+
+    .download-card:hover {
+      background: var(--card-hover);
+      border-color: var(--border-hover);
+    }
+
+    .download-card:active {
+      cursor: grabbing;
+    }
+
+    .download-card.is-dragging {
+      opacity: 0.4;
+      border-style: dashed;
+      border-color: var(--accent);
+    }
+
+    .card-icon-wrap {
+      width: 36px;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 20px;
+    }
+
+    .native-file-icon {
+      width: 26px;
+      height: 26px;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    .card-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .card-name-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+    }
+    .card-name:hover {
+      color: var(--accent-light);
+      text-decoration: underline;
+    }
+
+    .card-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11.5px;
+      color: var(--text-dim);
+    }
+
+    .card-url {
+      color: var(--text-dim);
+      text-decoration: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 300px;
+    }
+    .card-url:hover {
+      color: var(--accent-light);
+      text-decoration: underline;
+    }
+
+    .card-progress-bar {
+      width: 100%;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 3px;
+    }
+
+    .card-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #3b82f6);
+      border-radius: 2px;
+      transition: width 0.2s ease;
+    }
+
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .card-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .card-btn:hover {
+      background: var(--card-hover);
+      color: var(--text);
+      border-color: var(--border-hover);
+    }
+
+    .card-btn.btn-open {
+      color: var(--accent-light);
+      border-color: rgba(168, 85, 247, 0.3);
+      background: rgba(168, 85, 247, 0.08);
+      font-weight: 600;
+    }
+    .card-btn.btn-open:hover {
+      background: rgba(168, 85, 247, 0.2);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .card-btn.btn-pause {
+      color: #fbbf24;
+      border-color: rgba(245, 158, 11, 0.35);
+      background: rgba(245, 158, 11, 0.08);
+      font-weight: 600;
+    }
+    .card-btn.btn-pause:hover {
+      background: rgba(245, 158, 11, 0.22);
+      border-color: #f59e0b;
+      color: #fde68a;
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+    }
+
+    .card-btn.btn-resume {
+      color: #34d399;
+      border-color: rgba(16, 185, 129, 0.35);
+      background: rgba(16, 185, 129, 0.08);
+      font-weight: 600;
+    }
+    .card-btn.btn-resume:hover {
+      background: rgba(16, 185, 129, 0.22);
+      border-color: #10b981;
+      color: #6ee7b7;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+    }
+
+    .card-btn.btn-cancel {
+      color: #f87171;
+      border-color: rgba(239, 68, 68, 0.35);
+      background: rgba(239, 68, 68, 0.08);
+      font-weight: 600;
+    }
+    .card-btn.btn-cancel:hover {
+      background: rgba(239, 68, 68, 0.22);
+      border-color: #ef4444;
+      color: #fca5a5;
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+    }
+
+    .card-progress-fill.paused {
+      background: linear-gradient(90deg, #f59e0b, #d97706);
+    }
+
+    .card-btn.btn-delete {
+      color: var(--text-dim);
+      padding: 5px 8px;
+    }
+    .card-btn.btn-delete:hover {
+      background: rgba(239, 68, 68, 0.18);
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    /* Empty State */
+    .empty-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 60px 20px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+    .empty-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: rgba(168, 85, 247, 0.08);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-light);
+    }
+    .empty-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .empty-desc {
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        </div>
+        <div>
+          <div class="brand-title">Загрузки</div>
+          <div class="brand-subtitle">Black hole Browser</div>
+        </div>
+      </div>
+
+      <div class="sidebar-section-title">Категории</div>
+      <ul class="nav-list">
+        <li class="nav-item active" data-filter="all">
+          <div class="nav-item-left">
+            <span>📥</span>
+            <span>Все файлы</span>
+          </div>
+          <span class="nav-badge" id="badge-all">0</span>
+        </li>
+        <li class="nav-item" data-filter="apps">
+          <div class="nav-item-left">
+            <span>⚡</span>
+            <span>Программы & Архивы</span>
+          </div>
+          <span class="nav-badge" id="badge-apps">0</span>
+        </li>
+        <li class="nav-item" data-filter="media">
+          <div class="nav-item-left">
+            <span>🎬</span>
+            <span>Медиа & Аудио</span>
+          </div>
+          <span class="nav-badge" id="badge-media">0</span>
+        </li>
+        <li class="nav-item" data-filter="images">
+          <div class="nav-item-left">
+            <span>🖼️</span>
+            <span>Изображения</span>
+          </div>
+          <span class="nav-badge" id="badge-images">0</span>
+        </li>
+        <li class="nav-item" data-filter="docs">
+          <div class="nav-item-left">
+            <span>📄</span>
+            <span>Документы</span>
+          </div>
+          <span class="nav-badge" id="badge-docs">0</span>
+        </li>
+      </ul>
+
+      <div class="sidebar-section-title">Статистика</div>
+      <div class="sidebar-stats">
+        <div class="stat-row">
+          <span>Всего файлов:</span>
+          <span class="stat-val" id="stat-total">0</span>
+        </div>
+        <div class="stat-row">
+          <span>Активных:</span>
+          <span class="stat-val" id="stat-active" style="color: var(--blue);">0</span>
+        </div>
+        <div class="stat-row">
+          <span>Общий объем:</span>
+          <span class="stat-val" id="stat-size">0 Б</span>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button id="btn-open-folder" class="btn-action folder" title="Открыть папку Загрузки на компьютере">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+          <span>Папка загрузок</span>
+        </button>
+        <button id="btn-clear-all" class="btn-action danger" title="Очистить список истории загрузок">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+          <span>Очистить список</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="top-header">
+        <div class="search-wrapper">
+          <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" id="search-input" class="search-input" placeholder="Поиск в загрузках (по имени или ссылке)..." autocomplete="off">
+          <button id="search-clear" class="search-clear-btn" title="Очистить">✕</button>
+        </div>
+
+        <div class="stats-chip">
+          <span>Файлов: </span><strong id="header-count">0</strong>
+        </div>
+      </header>
+
+      <!-- Virtual Lazy Container -->
+      <div class="downloads-scroll-area" id="downloads-content"></div>
+    </main>
+  </div>
+
+  <script>
+    let downloads = [];
+    let filteredDownloads = [];
+    let currentFilter = 'all';
+    let searchQuery = '';
+    let renderedCount = 0;
+    const CHUNK_SIZE = 40;
+    const iconCache = new Map();
+
+    const searchInput = document.getElementById('search-input');
+    const searchClear = document.getElementById('search-clear');
+    const contentEl = document.getElementById('downloads-content');
+    const headerCount = document.getElementById('header-count');
+
+    function applyTheme(theme) {
+      const isLight = theme === 'light' || (theme === 'system' && window.matchMedia && !window.matchMedia('(prefers-color-scheme: dark)').matches);
+      document.body.classList.toggle('theme-light', isLight);
+    }
+
+    function formatBytes(bytes) {
+      if (!bytes || bytes <= 0) return '0 Б';
+      const k = 1024;
+      const sizes = ['Б', 'КБ', 'МБ', 'ГБ', 'ТБ'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function resolveName(d) {
+      let fn = d.filename || d.fileName || '';
+      if (!fn || fn === 'download' || fn === 'Без названия') {
+        if (d.savePath) {
+          const parts = d.savePath.split(/[/\\]/);
+          fn = decodeURIComponent(parts[parts.length - 1] || '');
+        }
+      }
+      return fn || 'Файл';
+    }
+
+    function getCategory(fn = '', mime = '') {
+      const ext = fn.includes('.') ? fn.split('.').pop().toLowerCase() : '';
+      const m = (mime || '').toLowerCase();
+      if (['exe', 'msi', 'bat', 'cmd', 'ps1', 'zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz', 'iso', 'cab', 'crx', 'xpi'].includes(ext) || m.includes('zip') || m.includes('compressed')) {
+        return 'apps';
+      }
+      if (['mp4', 'mkv', 'webm', 'avi', 'mov', 'flv', 'wmv', 'mp3', 'wav', 'ogg', 'flac', 'm4a', 'aac'].includes(ext) || m.startsWith('video/') || m.startsWith('audio/')) {
+        return 'media';
+      }
+      if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico', 'avif', 'tiff'].includes(ext) || m.startsWith('image/')) {
+        return 'images';
+      }
+      if (['pdf', 'doc', 'docx', 'txt', 'xls', 'xlsx', 'ppt', 'pptx', 'rtf', 'csv'].includes(ext) || m.includes('pdf') || m.includes('document')) {
+        return 'docs';
+      }
+      return 'other';
+    }
+
+    function getFallbackIcon(fn = '', mime = '') {
+      const cat = getCategory(fn, mime);
+      if (cat === 'apps') return '⚡';
+      if (cat === 'media') return '🎬';
+      if (cat === 'images') return '🖼️';
+      if (cat === 'docs') return '📄';
+      return '📦';
+    }
+
+    function getCachedOrNativeIcon(fn, mime, savePath, cardId) {
+      if (savePath && iconCache.has(savePath)) {
+        const dataUrl = iconCache.get(savePath);
+        if (dataUrl) return `<img class="native-file-icon" src="${dataUrl}" alt="" draggable="false">`;
+      }
+
+      if (savePath && window.electronAPI && window.electronAPI.getDownloadFileIcon && !iconCache.has(savePath)) {
+        iconCache.set(savePath, null);
+        window.electronAPI.getDownloadFileIcon(savePath).then(dataUrl => {
+          if (dataUrl) {
+            iconCache.set(savePath, dataUrl);
+            const iconEl = document.getElementById(`icon-wrap-${cardId}`);
+            if (iconEl) iconEl.innerHTML = `<img class="native-file-icon" src="${dataUrl}" alt="" draggable="false">`;
+          }
+        }).catch(() => {});
+      }
+
+      return getFallbackIcon(fn, mime);
+    }
+
+    function escapeHtml(str) {
+      return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function updateStats() {
+      let totalSize = 0;
+      let activeCount = 0;
+      let countApps = 0;
+      let countMedia = 0;
+      let countImages = 0;
+      let countDocs = 0;
+
+      for (let i = 0; i < downloads.length; i++) {
+        const d = downloads[i];
+        const fn = resolveName(d);
+        const cat = getCategory(fn, d.mimeType);
+        if (cat === 'apps') countApps++;
+        else if (cat === 'media') countMedia++;
+        else if (cat === 'images') countImages++;
+        else if (cat === 'docs') countDocs++;
+
+        if (d.state === 'progressing') activeCount++;
+        totalSize += (d.fileSize || d.totalBytes || 0);
+      }
+
+      document.getElementById('badge-all').textContent = downloads.length;
+      document.getElementById('badge-apps').textContent = countApps;
+      document.getElementById('badge-media').textContent = countMedia;
+      document.getElementById('badge-images').textContent = countImages;
+      document.getElementById('badge-docs').textContent = countDocs;
+
+      document.getElementById('stat-total').textContent = downloads.length;
+      document.getElementById('stat-active').textContent = activeCount;
+      document.getElementById('stat-size').textContent = formatBytes(totalSize);
+      headerCount.textContent = downloads.length;
+    }
+
+    function applyFilter() {
+      filteredDownloads = downloads.filter(d => {
+        const fn = resolveName(d).toLowerCase();
+        const url = (d.url || '').toLowerCase();
+        const cat = getCategory(resolveName(d), d.mimeType);
+
+        if (currentFilter !== 'all' && cat !== currentFilter) return false;
+        if (searchQuery && !fn.includes(searchQuery) && !url.includes(searchQuery)) return false;
+        return true;
+      });
+
+      renderedCount = 0;
+      contentEl.innerHTML = '';
+
+      if (filteredDownloads.length === 0) {
+        contentEl.innerHTML = `
+          <div class="empty-container">
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            </div>
+            <div class="empty-title">${searchQuery ? 'Ничего не найдено' : 'Загрузок пока нет'}</div>
+            <div class="empty-desc">${searchQuery ? 'Попробуйте изменить поисковый запрос' : 'Скачанные файлы будут отображаться здесь'}</div>
+          </div>
+        `;
+        return;
+      }
+
+      renderNextChunk();
+    }
+
+    function getDateHeading(timestamp) {
+      if (!timestamp) return 'Ранее';
+      const d = new Date(timestamp);
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      if (d.toDateString() === today.toDateString()) return 'Сегодня';
+      if (d.toDateString() === yesterday.toDateString()) return 'Вчера';
+      return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    function renderNextChunk() {
+      if (renderedCount >= filteredDownloads.length) return;
+
+      const chunk = filteredDownloads.slice(renderedCount, renderedCount + CHUNK_SIZE);
+      renderedCount += chunk.length;
+
+      let currentGroupEl = contentEl.lastElementChild;
+      let currentHeading = currentGroupEl ? currentGroupEl.dataset.heading : null;
+
+      const frag = document.createDocumentFragment();
+
+      for (let i = 0; i < chunk.length; i++) {
+        const d = chunk[i];
+        const time = d.completedTime || d.startTime || Date.now();
+        const heading = getDateHeading(time);
+
+        let listEl;
+        if (heading !== currentHeading) {
+          currentHeading = heading;
+          const groupEl = document.createElement('div');
+          groupEl.className = 'date-group';
+          groupEl.dataset.heading = heading;
+
+          groupEl.innerHTML = `
+            <div class="date-header">
+              <span class="date-title">${heading}</span>
+            </div>
+            <div class="items-list"></div>
+          `;
+          frag.appendChild(groupEl);
+          listEl = groupEl.querySelector('.items-list');
+          currentGroupEl = groupEl;
+        } else {
+          listEl = currentGroupEl.querySelector('.items-list');
+        }
+
+        const fn = resolveName(d);
+        const isCompleted = d.state === 'completed';
+        const isPaused = d.state === 'paused' || d.isPaused === true;
+        const isProgressing = d.state === 'progressing' && !isPaused;
+        const isCancelled = d.state === 'cancelled';
+        const isInterrupted = d.state === 'interrupted';
+
+        const totalBytes = d.fileSize || d.totalBytes || 0;
+        const receivedBytes = d.receivedBytes || 0;
+
+        let metaStatus = 'Завершено';
+        let metaColor = 'var(--success)';
+
+        if (isProgressing) {
+          const pct = totalBytes > 0 ? Math.round((receivedBytes / totalBytes) * 100) : 0;
+          metaStatus = `${pct}% • ${formatBytes(receivedBytes)}${totalBytes > 0 ? ' из ' + formatBytes(totalBytes) : ''}`;
+          metaColor = 'var(--blue)';
+        } else if (isPaused) {
+          const pct = totalBytes > 0 ? Math.round((receivedBytes / totalBytes) * 100) : 0;
+          metaStatus = `Приостановлено (${pct}%) • ${formatBytes(receivedBytes)}`;
+          metaColor = '#f59e0b';
+        } else if (isCancelled) {
+          metaStatus = 'Отменено';
+          metaColor = 'var(--danger)';
+        } else if (isInterrupted) {
+          metaStatus = 'Прервано';
+          metaColor = 'var(--danger)';
+        } else if (totalBytes > 0) {
+          metaStatus = formatBytes(totalBytes);
+        }
+
+        let domain = '';
+        try {
+          if (d.url) domain = new URL(d.url).hostname;
+        } catch (e) {}
+
+        const timeStr = d.completedTime || d.startTime ? new Date(d.completedTime || d.startTime).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : '';
+
+        const card = document.createElement('div');
+        card.className = 'download-card';
+        card.dataset.id = d.id;
+        card.dataset.savePath = d.savePath || '';
+
+        if (d.savePath && (isCompleted || isProgressing || isPaused)) {
+          card.setAttribute('draggable', 'true');
+        }
+
+        const iconHtml = getCachedOrNativeIcon(fn, d.mimeType, d.savePath, d.id);
+
+        card.innerHTML = `
+          <div class="card-icon-wrap" id="icon-wrap-${d.id}">${iconHtml}</div>
+          <div class="card-main">
+            <div class="card-name-row">
+              <span class="card-name" data-action="open-file" title="${escapeHtml(fn)} (${escapeHtml(d.savePath || '')})">${escapeHtml(fn)}</span>
+            </div>
+            <div class="card-meta-row">
+              <span style="color: ${metaColor}; font-weight: 600;">${metaStatus}</span>
+              ${timeStr ? `<span>• ${timeStr}</span>` : ''}
+              ${domain ? `<span>•</span><a class="card-url" href="${escapeHtml(d.url)}" target="_blank" title="${escapeHtml(d.url)}">${escapeHtml(domain)}</a>` : ''}
+            </div>
+            ${(isProgressing || isPaused) && totalBytes > 0 ? `
+              <div class="card-progress-bar">
+                <div class="card-progress-fill ${isPaused ? 'paused' : ''}" style="width: ${Math.min(100, Math.round((receivedBytes / totalBytes) * 100))}%"></div>
+              </div>
+            ` : ''}
+          </div>
+          <div class="card-actions">
+            ${isProgressing ? `
+              <button class="card-btn btn-pause" data-action="pause" title="Приостановить загрузку">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect></svg>
+                <span>Пауза</span>
+              </button>
+              <button class="card-btn btn-cancel" data-action="cancel" title="Отменить загрузку">
+                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <span>Отмена</span>
+              </button>
+            ` : ''}
+            ${isPaused ? `
+              <button class="card-btn btn-resume" data-action="resume" title="Возобновить загрузку">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+                <span>Возобновить</span>
+              </button>
+              <button class="card-btn btn-cancel" data-action="cancel" title="Отменить загрузку">
+                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <span>Отмена</span>
+              </button>
+            ` : ''}
+            ${isInterrupted ? `
+              <button class="card-btn btn-resume" data-action="resume" title="Повторить загрузку">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.19"></path></svg>
+                <span>Повторить</span>
+              </button>
+            ` : ''}
+            ${isCompleted && d.savePath ? `
+              <button class="card-btn btn-open" data-action="open-file" title="Открыть файл">Открыть</button>
+              <button class="card-btn" data-action="show-folder" title="Показать в папке">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+              </button>
+            ` : ''}
+            <button class="card-btn btn-delete" data-action="delete" title="Удалить из списка">✕</button>
+          </div>
+        `;
+
+        listEl.appendChild(card);
+      }
+
+      contentEl.appendChild(frag);
+    }
+
+    async function loadDownloads() {
+      try {
+        if (window.electronAPI && window.electronAPI.getDownloads) {
+          downloads = (await window.electronAPI.getDownloads(300)) || [];
+        }
+      } catch (e) { downloads = []; }
+      updateStats();
+      applyFilter();
+    }
+
+    async function init() {
+      try {
+        if (window.electronAPI && window.electronAPI.getSettings) {
+          const s = await window.electronAPI.getSettings();
+          if (s && s.theme) applyTheme(s.theme);
+        }
+      } catch (e) {}
+
+      if (window.electronAPI && window.electronAPI.onThemeChanged) {
+        window.electronAPI.onThemeChanged(data => { if (data && data.theme) applyTheme(data.theme); });
+      }
+
+      await loadDownloads();
+
+      if (window.electronAPI && window.electronAPI.onDownloadUpdated) {
+        window.electronAPI.onDownloadUpdated(() => {
+          loadDownloads();
+        });
+      }
+
+      // Infinite scroll listener
+      contentEl.addEventListener('scroll', () => {
+        if (contentEl.scrollTop + contentEl.clientHeight >= contentEl.scrollHeight - 300) {
+          renderNextChunk();
+        }
+      }, { passive: true });
+
+      // Debounced search
+      let searchTimeout;
+      searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          searchQuery = e.target.value.toLowerCase().trim();
+          searchClear.style.display = searchQuery ? 'flex' : 'none';
+          applyFilter();
+        }, 120);
+      });
+
+      searchClear.addEventListener('click', () => {
+        searchInput.value = '';
+        searchQuery = '';
+        searchClear.style.display = 'none';
+        searchInput.focus();
+        applyFilter();
+      });
+
+      // Categories
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+          document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+          item.classList.add('active');
+          currentFilter = item.dataset.filter;
+          applyFilter();
+        });
+      });
+
+      // Top folder & clear buttons
+      document.getElementById('btn-open-folder').addEventListener('click', () => {
+        if (window.electronAPI && window.electronAPI.openDownloadsFolder) {
+          window.electronAPI.openDownloadsFolder();
+        }
+      });
+
+      document.getElementById('btn-clear-all').addEventListener('click', async () => {
+        if (confirm('Очистить список загрузок? Сами файлы останутся на компьютере.')) {
+          if (window.electronAPI && window.electronAPI.clearDownloads) {
+            await window.electronAPI.clearDownloads();
+            loadDownloads();
+          }
+        }
+      });
+
+      // SINGLE Delegated Event Listener for clicks on downloads cards
+      contentEl.addEventListener('click', async (e) => {
+        const actionBtn = e.target.closest('[data-action]');
+        const card = e.target.closest('.download-card');
+        if (!card) return;
+
+        const savePath = card.dataset.savePath;
+        const id = card.dataset.id;
+
+        if (actionBtn) {
+          const action = actionBtn.dataset.action;
+          if (action === 'pause' && id) {
+            e.stopPropagation();
+            if (window.electronAPI && window.electronAPI.pauseDownload) {
+              await window.electronAPI.pauseDownload(id);
+              loadDownloads();
+            }
+            return;
+          }
+
+          if (action === 'resume' && id) {
+            e.stopPropagation();
+            if (window.electronAPI && window.electronAPI.resumeDownload) {
+              await window.electronAPI.resumeDownload(id);
+              loadDownloads();
+            }
+            return;
+          }
+
+          if (action === 'cancel' && id) {
+            e.stopPropagation();
+            if (window.electronAPI && window.electronAPI.cancelDownload) {
+              await window.electronAPI.cancelDownload(id);
+              loadDownloads();
+            }
+            return;
+          }
+
+          if (action === 'open-file' && savePath) {
+            e.stopPropagation();
+            if (window.electronAPI && window.electronAPI.openDownloadFile) {
+              window.electronAPI.openDownloadFile(savePath);
+            }
+            return;
+          }
+
+          if (action === 'show-folder' && savePath) {
+            e.stopPropagation();
+            if (window.electronAPI && window.electronAPI.showDownloadInFolder) {
+              window.electronAPI.showDownloadInFolder(savePath);
+            }
+            return;
+          }
+
+          if (action === 'delete' && id) {
+            e.stopPropagation();
+            if (window.electronAPI && window.electronAPI.removeDownloadItem) {
+              await window.electronAPI.removeDownloadItem(id);
+            }
+            downloads = downloads.filter(d => d.id !== id);
+            card.remove();
+            updateStats();
+            return;
+          }
+        }
+      });
+
+      // Drag and drop event delegation
+      contentEl.addEventListener('dragstart', (e) => {
+        const card = e.target.closest('.download-card');
+        if (!card || !card.dataset.savePath) return;
+        card.classList.add('is-dragging');
+        if (window.electronAPI && window.electronAPI.startDownloadDrag) {
+          window.electronAPI.startDownloadDrag(card.dataset.savePath);
+        }
+      });
+
+      contentEl.addEventListener('dragend', (e) => {
+        const card = e.target.closest('.download-card');
+        if (card) card.classList.remove('is-dragging');
+        if (window.electronAPI && window.electronAPI.endDownloadDrag) {
+          window.electronAPI.endDownloadDrag();
+        }
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

@@ -7,6 +7,7 @@ const adBlocker = require('./adBlocker');
 const updateManager = require('./updateManager');
 const dpiBypass = require('./dpiBypass');
 const storage = require('./storage');
+const downloadManager = require('./downloadManager');
 const defaultBrowser = require('./defaultBrowser');
 const { setupIpcHandlers } = require('./ipcHandlers');
 
@@ -559,119 +560,9 @@ if (!gotTheLock) {
     applyThemeSource();
 
     // Universal Download Manager & CRX Auto-installer
-    const setupSessionDownloads = (ses) => {
-      if (!ses) return;
-      ses.on('will-download', (event, item, webContents) => {
-        let filename = item.getFilename() || '';
-        const url = item.getURL() || '';
-        const totalBytes = item.getTotalBytes() || 0;
-        const mimeType = item.getMimeType() || '';
-        const downloadId = 'dl_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-
-        if (filename.endsWith('.crx')) {
-          const tempPath = path.join(app.getPath('temp'), `ext_${Date.now()}_${filename}`);
-          item.setSavePath(tempPath);
-          item.once('done', async (e, state) => {
-            if (state === 'completed') {
-              await extensionManager.installFromZipOrCrx(tempPath);
-            }
-          });
-          return;
-        }
-
-        const resolveFileName = () => {
-          let fn = item.getFilename() || filename;
-          if (!fn || fn === 'download' || fn === 'Без названия') {
-            const sp = item.getSavePath();
-            if (sp) fn = path.basename(sp);
-          }
-          if (!fn || fn === 'download') {
-            try {
-              const u = new URL(url);
-              const segs = u.pathname.split('/').filter(Boolean);
-              if (segs.length > 0) fn = decodeURIComponent(segs[segs.length - 1]);
-            } catch (e) {}
-          }
-          return fn || 'Файл';
-        };
-
-        const initialRecord = {
-          id: downloadId,
-          filename: resolveFileName(),
-          fileName: resolveFileName(),
-          url,
-          savePath: item.getSavePath() || '',
-          fileSize: totalBytes,
-          totalBytes: totalBytes,
-          receivedBytes: 0,
-          state: 'progressing',
-          mimeType,
-          startTime: Date.now()
-        };
-        storage.addDownloadRecord(initialRecord);
-
-        // Notify all browser windows
-        BrowserWindow.getAllWindows().forEach(win => {
-          if (!win.isDestroyed()) {
-            win.webContents.send('download-updated', initialRecord);
-          }
-        });
-
-        item.on('updated', (e, state) => {
-          const currentFilename = resolveFileName();
-          const updatedRecord = {
-            id: downloadId,
-            filename: currentFilename,
-            fileName: currentFilename,
-            url,
-            savePath: item.getSavePath() || '',
-            fileSize: item.getTotalBytes(),
-            totalBytes: item.getTotalBytes(),
-            receivedBytes: item.getReceivedBytes(),
-            state: state === 'interrupted' ? 'interrupted' : 'progressing',
-            mimeType
-          };
-          storage.addDownloadRecord(updatedRecord);
-          BrowserWindow.getAllWindows().forEach(win => {
-            if (!win.isDestroyed()) {
-              win.webContents.send('download-updated', updatedRecord);
-            }
-          });
-        });
-
-        item.once('done', (e, state) => {
-          const currentFilename = resolveFileName();
-          const finalRecord = {
-            id: downloadId,
-            filename: currentFilename,
-            fileName: currentFilename,
-            url,
-            savePath: item.getSavePath() || '',
-            fileSize: item.getTotalBytes(),
-            totalBytes: item.getTotalBytes(),
-            receivedBytes: item.getReceivedBytes(),
-            state: state === 'completed' ? 'completed' : (state === 'cancelled' ? 'cancelled' : 'interrupted'),
-            mimeType,
-            completedTime: Date.now()
-          };
-          storage.addDownloadRecord(finalRecord);
-          BrowserWindow.getAllWindows().forEach(win => {
-            if (!win.isDestroyed()) {
-              win.webContents.send('download-updated', finalRecord);
-            }
-          });
-
-          // Show floating VirusTotal toast over active page
-          if (state === 'completed' && finalRecord.savePath) {
-            popupManager.showVirusTotalToast(finalRecord);
-          }
-        });
-      });
-    };
-
-    setupSessionDownloads(session.defaultSession);
+    downloadManager.setupSessionDownloads(session.defaultSession);
     try {
-      setupSessionDownloads(session.fromPartition('incognito'));
+      downloadManager.setupSessionDownloads(session.fromPartition('incognito'));
     } catch (e) {}
 
     // Handle certificate errors gracefully

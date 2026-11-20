@@ -3557,7 +3557,7 @@ function updateDownloadsToolbarBadge() {
   const bubbleCount = document.getElementById('downloads-bubble-active-count');
   if (!badge) return;
 
-  const progressingCount = (currentDownloads || []).filter(d => d.state === 'progressing').length;
+  const progressingCount = (currentDownloads || []).filter(d => d.state === 'progressing' || d.state === 'paused' || d.isPaused).length;
   if (progressingCount > 0) {
     badge.classList.remove('hidden');
     badge.classList.add('progressing');
@@ -3826,11 +3826,13 @@ async function renderDownloadsList() {
 
     const fn = resolveDownloadFileName(d);
     const isCompleted = d.state === 'completed';
-    const isProgressing = d.state === 'progressing';
-    const isCancelled = d.state === 'cancelled' || d.state === 'interrupted';
+    const isPaused = d.state === 'paused' || d.isPaused === true;
+    const isProgressing = d.state === 'progressing' && !isPaused;
+    const isCancelled = d.state === 'cancelled';
+    const isInterrupted = d.state === 'interrupted';
 
     let stateBadgeText = 'Завершено';
-    let stateBadgeClass = 'badge-success';
+    let stateBadgeClass = 'state-completed';
 
     const totalBytes = d.fileSize || d.totalBytes || 0;
     const receivedBytes = d.receivedBytes || 0;
@@ -3838,10 +3840,17 @@ async function renderDownloadsList() {
     if (isProgressing) {
       const pct = totalBytes > 0 ? Math.round((receivedBytes / totalBytes) * 100) : 0;
       stateBadgeText = `Скачивается (${pct}%)`;
-      stateBadgeClass = 'badge-primary';
+      stateBadgeClass = 'state-progressing';
+    } else if (isPaused) {
+      const pct = totalBytes > 0 ? Math.round((receivedBytes / totalBytes) * 100) : 0;
+      stateBadgeText = `На паузе (${pct}%)`;
+      stateBadgeClass = 'state-paused';
     } else if (isCancelled) {
+      stateBadgeText = 'Отменено';
+      stateBadgeClass = 'state-cancelled';
+    } else if (isInterrupted) {
       stateBadgeText = 'Прервано';
-      stateBadgeClass = 'badge-danger';
+      stateBadgeClass = 'state-interrupted';
     }
 
     const sizeStr = totalBytes > 0 
@@ -3866,13 +3875,24 @@ async function renderDownloadsList() {
           ${dateStr ? `<span>•</span><span>${dateStr}</span>` : ''}
           <span class="download-state-badge ${stateBadgeClass}">${stateBadgeText}</span>
         </div>
-        ${isProgressing && totalBytes > 0 ? `
+        ${(isProgressing || isPaused) && totalBytes > 0 ? `
           <div class="download-progress-bar-wrap">
-            <div class="download-progress-bar-fill" style="width: ${Math.min(100, Math.round((receivedBytes / totalBytes) * 100))}%"></div>
+            <div class="download-progress-bar-fill ${isPaused ? 'paused' : ''}" style="width: ${Math.min(100, Math.round((receivedBytes / totalBytes) * 100))}%; ${isPaused ? 'background: linear-gradient(90deg, #f59e0b, #d97706);' : ''}"></div>
           </div>
         ` : ''}
       </div>
       <div class="download-actions">
+        ${isProgressing ? `
+          <button class="btn btn-secondary btn-sm btn-pause-download" title="Приостановить загрузку">⏸ Пауза</button>
+          <button class="btn btn-secondary btn-sm btn-cancel-download" title="Отменить загрузку">✕ Отмена</button>
+        ` : ''}
+        ${isPaused ? `
+          <button class="btn btn-secondary btn-sm btn-resume-download" title="Возобновить загрузку">▶ Возобновить</button>
+          <button class="btn btn-secondary btn-sm btn-cancel-download" title="Отменить загрузку">✕ Отмена</button>
+        ` : ''}
+        ${isInterrupted ? `
+          <button class="btn btn-secondary btn-sm btn-resume-download" title="Повторить загрузку">🔄 Повторить</button>
+        ` : ''}
         ${isCompleted && d.savePath ? `
           <button class="btn btn-secondary btn-sm btn-open-file" title="Открыть файл">Открыть</button>
           <button class="btn btn-secondary btn-sm btn-show-folder" title="Показать в папке">Показать в папке</button>
@@ -3880,8 +3900,41 @@ async function renderDownloadsList() {
       </div>
     `;
 
-    if (d.savePath && (isCompleted || isProgressing)) {
+    if (d.savePath && (isCompleted || isProgressing || isPaused)) {
       attachDownloadDrag(card, d.savePath);
+    }
+
+    const btnPause = card.querySelector('.btn-pause-download');
+    if (btnPause) {
+      btnPause.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (window.electronAPI && window.electronAPI.pauseDownload) {
+          await window.electronAPI.pauseDownload(d.id);
+          renderDownloadsList();
+        }
+      });
+    }
+
+    const btnResume = card.querySelector('.btn-resume-download');
+    if (btnResume) {
+      btnResume.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (window.electronAPI && window.electronAPI.resumeDownload) {
+          await window.electronAPI.resumeDownload(d.id);
+          renderDownloadsList();
+        }
+      });
+    }
+
+    const btnCancel = card.querySelector('.btn-cancel-download');
+    if (btnCancel) {
+      btnCancel.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (window.electronAPI && window.electronAPI.cancelDownload) {
+          await window.electronAPI.cancelDownload(d.id);
+          renderDownloadsList();
+        }
+      });
     }
 
     const btnOpenFile = card.querySelector('.btn-open-file');

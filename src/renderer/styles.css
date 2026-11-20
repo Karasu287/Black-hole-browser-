@@ -2263,6 +2263,10 @@ body.is-tab-dragging .browser-tab {
   background: rgba(59, 130, 246, 0.15);
   color: #60a5fa;
 }
+.state-paused {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+}
 .state-cancelled, .state-interrupted {
   background: rgba(239, 68, 68, 0.15);
   color: #f87171;
@@ -2272,6 +2276,36 @@ body.is-tab-dragging .browser-tab {
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
+}
+.btn-pause-download {
+  color: #fbbf24 !important;
+  border-color: rgba(245, 158, 11, 0.4) !important;
+  background: rgba(245, 158, 11, 0.1) !important;
+}
+.btn-pause-download:hover {
+  background: rgba(245, 158, 11, 0.22) !important;
+  border-color: #f59e0b !important;
+  color: #fde68a !important;
+}
+.btn-resume-download {
+  color: #34d399 !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+  background: rgba(16, 185, 129, 0.1) !important;
+}
+.btn-resume-download:hover {
+  background: rgba(16, 185, 129, 0.22) !important;
+  border-color: #10b981 !important;
+  color: #6ee7b7 !important;
+}
+.btn-cancel-download {
+  color: #f87171 !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  background: rgba(239, 68, 68, 0.1) !important;
+}
+.btn-cancel-download:hover {
+  background: rgba(239, 68, 68, 0.22) !important;
+  border-color: #ef4444 !important;
+  color: #fca5a5 !important;
 }
 .btn-vt-file {
   color: #60a5fa !important;

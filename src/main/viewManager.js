@@ -505,48 +505,49 @@ class ViewManager {
 
     // Handle new-window / target=_blank to open in new browser tab with flood/spam protection
     view.webContents.setWindowOpenHandler(({ url, disposition }) => {
-      if (!url || typeof url !== 'string') return { action: 'deny' };
-      const trimmedUrl = url.trim();
-      if (trimmedUrl.startsWith('javascript:') || trimmedUrl.startsWith('data:') || trimmedUrl.startsWith('about:blank')) {
+      const trimmedUrl = (url && typeof url === 'string') ? url.trim() : '';
+      if (trimmedUrl.startsWith('javascript:') || trimmedUrl.startsWith('data:')) {
         return { action: 'deny' };
       }
 
+      const targetUrl = trimmedUrl || 'about:blank';
+
       // Filter known spam / popup domains
-      const lower = trimmedUrl.toLowerCase();
+      const lower = targetUrl.toLowerCase();
       const shadyList = ['1xbet', '1x-bet', 'vulkan', 'pin-up', 'vavada', 'joycasino', 'refpa', 'ref-pa', 'popads', 'adsterra', 'clickadu', 'propeller', 'onclick', 'traffim', 'up-x', 'catcasino', 'spinbetter', '1win', 'betwinner', 'melbet', 'mostbet'];
       if (shadyList.some(s => lower.includes(s))) {
-        console.log('[Black hole Shield] Blocked shady popup tab:', trimmedUrl);
+        console.log('[Black hole Shield] Blocked shady popup tab:', targetUrl);
         return { action: 'deny' };
       }
 
       // Check for external protocol (riotclient, steam, discord, tg, magnet, mailto, etc.)
       try {
-        const parsed = new URL(trimmedUrl);
+        const parsed = new URL(targetUrl);
         const internalSchemes = ['http:', 'https:', 'eclipse:', 'blackhole:', 'about:', 'chrome:', 'file:'];
         if (!internalSchemes.includes(parsed.protocol)) {
-          shell.openExternal(trimmedUrl).catch(() => {});
+          shell.openExternal(targetUrl).catch(() => {});
           return { action: 'deny' };
         }
       } catch (e) {
-        if (!trimmedUrl.startsWith('http://') && !trimmedUrl.startsWith('https://') && !trimmedUrl.startsWith('eclipse://') && !trimmedUrl.startsWith('blackhole://')) {
-          shell.openExternal(trimmedUrl).catch(() => {});
+        if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://') && !targetUrl.startsWith('eclipse://') && !targetUrl.startsWith('blackhole://') && targetUrl !== 'about:blank') {
+          shell.openExternal(targetUrl).catch(() => {});
           return { action: 'deny' };
         }
       }
 
-      // Rate limit popup tabs to max 3 within 2 seconds per view
+      // Rate limit popup tabs to max 5 within 2 seconds per view
       const now = Date.now();
       if (!view._popupWindow) view._popupWindow = { start: now, count: 0 };
       if (now - view._popupWindow.start > 2000) {
         view._popupWindow = { start: now, count: 0 };
       }
       view._popupWindow.count++;
-      if (view._popupWindow.count > 3) {
-        console.warn('[Black hole Shield] Blocked excessive popup spam:', trimmedUrl);
+      if (view._popupWindow.count > 5) {
+        console.warn('[Black hole Shield] Blocked excessive popup spam:', targetUrl);
         return { action: 'deny' };
       }
 
-      this.createTab({ url: trimmedUrl, active: disposition !== 'background-tab', wasOpenedByScript: true });
+      this.createTab({ url: targetUrl, active: disposition !== 'background-tab', wasOpenedByScript: true });
       return { action: 'deny' };
     });
 
@@ -637,18 +638,13 @@ class ViewManager {
       return false;
     };
 
-    // CRITICAL: Block guest webpages from closing the browser window via window.close()
-    wc.on('close', (event) => {
-      if (event && typeof event.preventDefault === 'function') {
-        event.preventDefault();
-      }
-      console.log(`[Black hole Shield] Intercepted webContents close for tab ${tabId}`);
+    // Safely handle guest pages calling window.close()
+    wc.on('close', () => {
       const tab = this.tabs.get(tabId);
-      if (tab && tab.wasOpenedByScript && this.tabs.size > 1) {
-        console.log(`[Black hole Shield] Closing script-opened tab ${tabId}`);
-        this.closeTab(tabId);
-      } else {
-        console.warn(`[Black hole Shield] Blocked guest page window.close() on tab ${tabId}`);
+      if (tab && !tab._isClosing && tab.wasOpenedByScript && this.tabs.size > 1) {
+        setImmediate(() => {
+          this.closeTab(tabId);
+        });
       }
     });
 
@@ -1808,7 +1804,11 @@ class ViewManager {
     }
 
     const tab = this.tabs.get(tabId);
-    if (!tab) return;
+    if (!tab || tab._isClosing) return;
+    tab._isClosing = true;
+
+    // Immediately remove from tab map so no lookups or recursive events can target it
+    this.tabs.delete(tabId);
 
     // Save to recently closed tabs for Ctrl+Shift+T restore
     if (tab.url && tab.url !== 'about:blank') {
@@ -1836,14 +1836,13 @@ class ViewManager {
       }
       try {
         if (tab.view.webContents && !tab.view.webContents.isDestroyed()) {
+          tab.view.webContents.removeAllListeners();
           tab.view.webContents.close();
         }
       } catch (e) {
         console.warn('Error closing webContents in closeTab:', e);
       }
     }
-
-    this.tabs.delete(tabId);
 
     // If active tab closed, switch to adjacent tab
     if (this.activeTabId === tabId) {

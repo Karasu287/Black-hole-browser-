@@ -706,7 +706,9 @@ class StorageManager {
         ...d,
         filename: fn,
         fileName: fn,
-        totalBytes: d.fileSize || d.totalBytes || d.receivedBytes || 0
+        totalBytes: d.fileSize || d.totalBytes || d.receivedBytes || 0,
+        isPaused: !!d.isPaused,
+        canResume: d.canResume !== undefined ? !!d.canResume : false
       };
     });
   }
@@ -715,15 +717,17 @@ class StorageManager {
     if (!this.data.downloads) this.data.downloads = [];
     // If download item with same id or savePath already exists, update it
     const idx = this.data.downloads.findIndex(d => (record.id && d.id === record.id) || (record.savePath && d.savePath === record.savePath));
+    const existing = idx >= 0 ? this.data.downloads[idx] : {};
     
-    let fn = record.filename || record.fileName || '';
+    let fn = record.filename || record.fileName || existing.filename || existing.fileName || '';
     if (!fn || fn === 'download' || fn === 'Без названия' || fn.trim() === '') {
-      if (record.savePath) {
-        fn = path.basename(record.savePath);
+      const sp = record.savePath || existing.savePath;
+      if (sp) {
+        fn = path.basename(sp);
       }
       if (!fn || fn === 'download') {
         try {
-          const parsedUrl = new URL(record.url);
+          const parsedUrl = new URL(record.url || existing.url);
           const segs = parsedUrl.pathname.split('/').filter(Boolean);
           if (segs.length > 0) fn = decodeURIComponent(segs[segs.length - 1]);
         } catch (e) {}
@@ -732,22 +736,24 @@ class StorageManager {
     if (!fn) fn = 'Файл';
 
     const entry = {
-      id: record.id || ('dl_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5)),
+      id: record.id || existing.id || ('dl_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5)),
       filename: fn,
       fileName: fn,
-      url: record.url || '',
-      savePath: record.savePath || '',
-      fileSize: record.fileSize || record.totalBytes || 0,
-      totalBytes: record.fileSize || record.totalBytes || 0,
-      receivedBytes: record.receivedBytes || 0,
-      state: record.state || 'completed', // 'progressing' | 'completed' | 'cancelled' | 'interrupted'
-      mimeType: record.mimeType || '',
-      startTime: record.startTime || Date.now(),
-      completedTime: record.completedTime || (record.state === 'completed' ? Date.now() : null)
+      url: record.url !== undefined ? record.url : (existing.url || ''),
+      savePath: record.savePath !== undefined ? record.savePath : (existing.savePath || ''),
+      fileSize: record.fileSize || record.totalBytes || existing.fileSize || existing.totalBytes || 0,
+      totalBytes: record.totalBytes || record.fileSize || existing.totalBytes || existing.fileSize || 0,
+      receivedBytes: record.receivedBytes !== undefined ? record.receivedBytes : (existing.receivedBytes || 0),
+      state: record.state || existing.state || 'completed', // 'progressing' | 'paused' | 'completed' | 'cancelled' | 'interrupted'
+      isPaused: record.isPaused !== undefined ? !!record.isPaused : (existing.isPaused || false),
+      canResume: record.canResume !== undefined ? !!record.canResume : (existing.canResume || false),
+      mimeType: record.mimeType !== undefined ? record.mimeType : (existing.mimeType || ''),
+      startTime: record.startTime || existing.startTime || Date.now(),
+      completedTime: record.completedTime !== undefined ? record.completedTime : (existing.completedTime || (record.state === 'completed' ? Date.now() : null))
     };
 
     if (idx >= 0) {
-      this.data.downloads[idx] = { ...this.data.downloads[idx], ...entry };
+      this.data.downloads[idx] = entry;
     } else {
       this.data.downloads.unshift(entry);
     }

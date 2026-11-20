@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Загрузки</title>
+  <style>
+    :root {
+      --bg-bubble: rgba(11, 13, 20, 0.96);
+      --bg-card: rgba(255, 255, 255, 0.04);
+      --bg-card-hover: rgba(255, 255, 255, 0.08);
+      --border: rgba(255, 255, 255, 0.12);
+      --accent: #a855f7;
+      --accent-glow: rgba(168, 85, 247, 0.3);
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --success: #34d399;
+      --danger: #f87171;
+      --blue: #60a5fa;
+    }
+
+    body.theme-light {
+      --bg-bubble: rgba(255, 255, 255, 0.98);
+      --bg-card: #f8fafc;
+      --bg-card-hover: #f1f5f9;
+      --border: #e2e8f0;
+      --accent: #9333ea;
+      --accent-glow: rgba(147, 51, 234, 0.2);
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --success: #059669;
+      --danger: #dc2626;
+      --blue: #2563eb;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: transparent;
+    }
+
+    .bubble-container {
+      width: 100%;
+      height: 100%;
+      background: var(--bg-bubble);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.75), 0 0 24px var(--accent-glow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: popIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* Header */
+    .bubble-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .bubble-title-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .bubble-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .active-badge {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 10px;
+      background: rgba(168, 85, 247, 0.2);
+      color: var(--accent);
+      border: 1px solid var(--accent-glow);
+    }
+    .active-badge.hidden { display: none; }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .icon-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .icon-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text);
+    }
+    .icon-btn.close:hover {
+      background: rgba(239, 68, 68, 0.18);
+      color: var(--danger);
+    }
+
+    /* List */
+    .bubble-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .bubble-list::-webkit-scrollbar {
+      width: 5px;
+    }
+    .bubble-list::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: 4px;
+    }
+
+    /* Card */
+    .download-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      transition: all 0.18s ease;
+      cursor: grab;
+      position: relative;
+    }
+    .download-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+    .download-card:active {
+      cursor: grabbing;
+    }
+    .download-card.is-dragging {
+      opacity: 0.45;
+      border-style: dashed;
+      border-color: var(--accent);
+    }
+
+    .card-icon-wrap {
+      width: 36px;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 20px;
+    }
+    .native-file-icon {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    .card-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+    }
+    .card-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.25;
+    }
+    .card-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .card-progress-bar {
+      width: 100%;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 3px;
+    }
+    .card-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #a855f7, #3b82f6);
+      border-radius: 2px;
+      transition: width 0.2s ease;
+    }
+
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .action-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+    .action-btn:hover {
+      background: var(--bg-card-hover);
+      color: var(--text);
+      border-color: var(--accent);
+    }
+    .action-btn.btn-pause {
+      color: #f59e0b;
+      border-color: rgba(245, 158, 11, 0.35);
+      background: rgba(245, 158, 11, 0.08);
+      font-weight: 600;
+      padding: 4px 7px;
+    }
+    .action-btn.btn-pause:hover {
+      background: rgba(245, 158, 11, 0.22);
+      border-color: #f59e0b;
+      color: #fbbf24;
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.35);
+    }
+    .action-btn.btn-resume {
+      color: #10b981;
+      border-color: rgba(16, 185, 129, 0.35);
+      background: rgba(16, 185, 129, 0.08);
+      font-weight: 600;
+      padding: 4px 7px;
+    }
+    .action-btn.btn-resume:hover {
+      background: rgba(16, 185, 129, 0.22);
+      border-color: #10b981;
+      color: #34d399;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.35);
+    }
+    .action-btn.btn-cancel {
+      color: #ef4444;
+      border-color: rgba(239, 68, 68, 0.35);
+      background: rgba(239, 68, 68, 0.08);
+      font-weight: 600;
+      padding: 4px 7px;
+    }
+    .action-btn.btn-cancel:hover {
+      background: rgba(239, 68, 68, 0.22);
+      border-color: #ef4444;
+      color: #f87171;
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.35);
+    }
+    .card-progress-fill.paused {
+      background: linear-gradient(90deg, #f59e0b, #d97706);
+    }
+    .action-btn.btn-vt {
+      color: #60a5fa;
+      border-color: rgba(59, 130, 246, 0.3);
+      background: rgba(59, 130, 246, 0.08);
+      font-weight: 600;
+    }
+    .action-btn.btn-vt:hover {
+      background: rgba(59, 130, 246, 0.2);
+      border-color: #3b82f6;
+      color: #93c5fd;
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.35);
+    }
+
+    /* Footer */
+    .bubble-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-top: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.2);
+      flex-shrink: 0;
+    }
+    .footer-btn {
+      background: transparent;
+      border: none;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: 6px;
+      transition: all 0.15s ease;
+    }
+    .footer-btn:hover {
+      background: rgba(168, 85, 247, 0.15);
+    }
+    .footer-btn.clear {
+      color: var(--text-muted);
+    }
+    .footer-btn.clear:hover {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+    }
+    .hotkey-tag {
+      font-size: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 1px 5px;
+      border-radius: 4px;
+      color: var(--text-muted);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 16px;
+      color: var(--text-muted);
+      font-size: 13px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="bubble-container">
+    <div class="bubble-header">
+      <div class="bubble-title-group">
+        <div class="bubble-title">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.2" fill="none" style="color:var(--accent);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <span>Загрузки</span>
+        </div>
+        <span id="active-badge" class="active-badge hidden">0 акт.</span>
+      </div>
+      <div class="header-actions">
+        <button id="btn-open-folder" class="icon-btn" title="📂 Открыть папку загрузок">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+        </button>
+        <button id="btn-close" class="icon-btn close" title="Закрыть (Esc)">✕</button>
+      </div>
+    </div>
+
+    <div id="downloads-list" class="bubble-list">
+      <!-- Rendered dynamically -->
+    </div>
+
+    <div class="bubble-footer">
+      <button id="btn-show-all" class="footer-btn">
+        <span>Показать все</span>
+        <span class="hotkey-tag">Ctrl+J</span>
+      </button>
+      <button id="btn-clear" class="footer-btn clear">Очистить список</button>
+    </div>
+  </div>
+
+  <script>
+    let downloads = [];
+    const iconCache = new Map();
+
+    function applyTheme(theme) {
+      const isLight = theme === 'light' || (theme === 'system' && window.matchMedia && !window.matchMedia('(prefers-color-scheme: dark)').matches);
+      document.body.classList.toggle('theme-light', isLight);
+    }
+
+    async function init() {
+      try {
+        const settings = await window.electronAPI.getSettings();
+        if (settings && settings.theme) applyTheme(settings.theme);
+      } catch (e) {}
+
+      loadDownloads();
+
+      if (window.electronAPI.onDownloadUpdated) {
+        window.electronAPI.onDownloadUpdated(() => {
+          loadDownloads();
+        });
+      }
+
+      if (window.electronAPI.onThemeChanged) {
+        window.electronAPI.onThemeChanged((data) => {
+          if (data && data.theme) applyTheme(data.theme);
+        });
+      }
+
+      document.getElementById('btn-close').addEventListener('click', () => {
+        window.electronAPI.closeBubble();
+      });
+
+      document.getElementById('btn-open-folder').addEventListener('click', () => {
+        window.electronAPI.openDownloadsFolder();
+      });
+
+      document.getElementById('btn-show-all').addEventListener('click', () => {
+        window.electronAPI.openFullDownloadsModal();
+      });
+
+      document.getElementById('btn-clear').addEventListener('click', async () => {
+        await window.electronAPI.clearDownloads();
+        loadDownloads();
+      });
+
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          window.electronAPI.closeBubble();
+        }
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'j' || e.key === 'J' || e.key === 'о' || e.key === 'О')) {
+          e.preventDefault();
+          window.electronAPI.openFullDownloadsModal();
+        }
+      });
+    }
+
+    function formatBytes(bytes) {
+      if (!bytes || bytes <= 0) return '0 Б';
+      const k = 1024;
+      const sizes = ['Б', 'КБ', 'МБ', 'ГБ', 'ТБ'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function getFallbackIcon(fn, mimeType) {
+      const ext = fn.includes('.') ? fn.split('.').pop().toLowerCase() : '';
+      if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico'].includes(ext)) return '🖼️';
+      if (['mp4', 'mkv', 'webm', 'avi', 'mov', 'flv'].includes(ext)) return '🎬';
+      if (['mp3', 'wav', 'ogg', 'flac', 'm4a'].includes(ext)) return '🎵';
+      if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2'].includes(ext)) return '📦';
+      if (['exe', 'msi', 'bat', 'cmd'].includes(ext)) return '⚡';
+      if (['crx', 'xpi'].includes(ext)) return '🧩';
+      if (['pdf', 'doc', 'docx', 'txt', 'xls', 'xlsx', 'ppt'].includes(ext)) return '📄';
+      return '📄';
+    }
+
+    function getCachedOrNativeIcon(fn, mime, savePath, onLoaded) {
+      if (savePath && iconCache.has(savePath)) {
+        const dataUrl = iconCache.get(savePath);
+        if (dataUrl) return `<img class="native-file-icon" src="${dataUrl}" alt="" draggable="false">`;
+      }
+
+      if (savePath && window.electronAPI.getDownloadFileIcon && !iconCache.has(savePath)) {
+        iconCache.set(savePath, null);
+        window.electronAPI.getDownloadFileIcon(savePath).then(dataUrl => {
+          if (dataUrl) {
+            iconCache.set(savePath, dataUrl);
+            onLoaded(dataUrl);
+          }
+        }).catch(() => {});
+      }
+
+      return getFallbackIcon(fn, mime);
+    }
+
+    function resolveName(d) {
+      let fn = d.filename || d.fileName || '';
+      if (!fn || fn === 'download' || fn === 'Без названия') {
+        if (d.savePath) {
+          const parts = d.savePath.split(/[/\\]/);
+          fn = decodeURIComponent(parts[parts.length - 1] || '');
+        }
+      }
+      return fn || 'Файл';
+    }
+
+    async function loadDownloads() {
+      try {
+        downloads = await window.electronAPI.getDownloads(25);
+      } catch (e) {
+        downloads = [];
+      }
+
+      const activeBadge = document.getElementById('active-badge');
+      const progressing = downloads.filter(d => d.state === 'progressing' || d.state === 'paused' || d.isPaused);
+      if (progressing.length > 0) {
+        activeBadge.textContent = `${progressing.length} акт.`;
+        activeBadge.classList.remove('hidden');
+      } else {
+        activeBadge.classList.add('hidden');
+      }
+
+      const listEl = document.getElementById('downloads-list');
+      listEl.innerHTML = '';
+
+      if (downloads.length === 0) {
+        listEl.innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" width="36" height="36" stroke="currentColor" stroke-width="1.5" fill="none" style="opacity:0.35;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <div>Загрузок пока нет</div>
+          </div>
+        `;
+        return;
+      }
+
+      downloads.slice(0, 10).forEach(d => {
+        const card = document.createElement('div');
+        card.className = 'download-card';
+
+        const fn = resolveName(d);
+        const isCompleted = d.state === 'completed';
+        const isPaused = d.state === 'paused' || d.isPaused === true;
+        const isProgressing = d.state === 'progressing' && !isPaused;
+        const isCancelled = d.state === 'cancelled';
+        const isInterrupted = d.state === 'interrupted';
+
+        const totalBytes = d.fileSize || d.totalBytes || 0;
+        const receivedBytes = d.receivedBytes || 0;
+
+        let metaStatus = 'Завершено';
+        let metaColor = 'var(--success)';
+
+        if (isProgressing) {
+          const pct = totalBytes > 0 ? Math.round((receivedBytes / totalBytes) * 100) : 0;
+          metaStatus = `${pct}% • ${formatBytes(receivedBytes)}${totalBytes > 0 ? ' из ' + formatBytes(totalBytes) : ''}`;
+          metaColor = 'var(--blue)';
+        } else if (isPaused) {
+          const pct = totalBytes > 0 ? Math.round((receivedBytes / totalBytes) * 100) : 0;
+          metaStatus = `Приостановлено (${pct}%) • ${formatBytes(receivedBytes)}`;
+          metaColor = '#f59e0b';
+        } else if (isCancelled) {
+          metaStatus = 'Отменено';
+          metaColor = 'var(--danger)';
+        } else if (isInterrupted) {
+          metaStatus = 'Прервано';
+          metaColor = 'var(--danger)';
+        } else if (totalBytes > 0) {
+          metaStatus = formatBytes(totalBytes);
+        }
+
+        card.innerHTML = `
+          <div class="card-icon-wrap" id="icon-${d.id}">
+            ${getCachedOrNativeIcon(fn, d.mimeType, d.savePath, (dataUrl) => {
+              const iconEl = card.querySelector(`#icon-${d.id}`);
+              if (iconEl) iconEl.innerHTML = `<img class="native-file-icon" src="${dataUrl}" alt="" draggable="false">`;
+            })}
+          </div>
+          <div class="card-info">
+            <div class="card-name" title="${fn}">${fn}</div>
+            <div class="card-meta">
+              <span style="color: ${metaColor}; font-weight: 600;">${metaStatus}</span>
+            </div>
+            ${(isProgressing || isPaused) && totalBytes > 0 ? `
+              <div class="card-progress-bar">
+                <div class="card-progress-fill ${isPaused ? 'paused' : ''}" style="width: ${Math.min(100, Math.round((receivedBytes / totalBytes) * 100))}%"></div>
+              </div>
+            ` : ''}
+          </div>
+          <div class="card-actions">
+            ${isProgressing ? `
+              <button class="action-btn btn-pause" data-action="pause" title="Приостановить загрузку">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect></svg>
+              </button>
+              <button class="action-btn btn-cancel" data-action="cancel" title="Отменить загрузку">
+                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            ` : ''}
+            ${isPaused ? `
+              <button class="action-btn btn-resume" data-action="resume" title="Возобновить загрузку">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+              </button>
+              <button class="action-btn btn-cancel" data-action="cancel" title="Отменить загрузку">
+                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            ` : ''}
+            ${isInterrupted ? `
+              <button class="action-btn btn-resume" data-action="resume" title="Повторить загрузку">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.19"></path></svg>
+              </button>
+            ` : ''}
+            ${isCompleted && d.savePath ? `
+              <button class="action-btn btn-open" title="Открыть файл">Открыть</button>
+              <button class="action-btn btn-folder" title="Показать в папке">📂</button>
+            ` : ''}
+          </div>
+        `;
+
+        if (d.savePath && (isCompleted || isProgressing || isPaused)) {
+          card.setAttribute('draggable', 'true');
+          card.title = 'Перетяните файл в любую программу (CapCut, Premiere, Telegram и др.) или на рабочий стол';
+          card.addEventListener('dragstart', (e) => {
+            e.preventDefault();
+            card.classList.add('is-dragging');
+            if (window.electronAPI && window.electronAPI.startDownloadDrag) {
+              window.electronAPI.startDownloadDrag(d.savePath);
+            }
+          });
+          card.addEventListener('dragend', () => {
+            card.classList.remove('is-dragging');
+            if (window.electronAPI && window.electronAPI.endDownloadDrag) {
+              window.electronAPI.endDownloadDrag();
+            }
+          });
+        }
+
+        const btnPause = card.querySelector('.btn-pause');
+        if (btnPause) {
+          btnPause.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            if (window.electronAPI && window.electronAPI.pauseDownload) {
+              await window.electronAPI.pauseDownload(d.id);
+              loadDownloads();
+            }
+          });
+        }
+
+        const btnResume = card.querySelector('.btn-resume');
+        if (btnResume) {
+          btnResume.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            if (window.electronAPI && window.electronAPI.resumeDownload) {
+              await window.electronAPI.resumeDownload(d.id);
+              loadDownloads();
+            }
+          });
+        }
+
+        const btnCancel = card.querySelector('.btn-cancel');
+        if (btnCancel) {
+          btnCancel.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            if (window.electronAPI && window.electronAPI.cancelDownload) {
+              await window.electronAPI.cancelDownload(d.id);
+              loadDownloads();
+            }
+          });
+        }
+
+        const btnOpen = card.querySelector('.btn-open');
+        if (btnOpen) {
+          btnOpen.addEventListener('click', (e) => {
+            e.stopPropagation();
+            window.electronAPI.openDownloadFile(d.savePath);
+          });
+        }
+
+        const btnFolder = card.querySelector('.btn-folder');
+        if (btnFolder) {
+          btnFolder.addEventListener('click', (e) => {
+            e.stopPropagation();
+            window.electronAPI.showDownloadInFolder(d.savePath);
+          });
+        }
+
+        listEl.appendChild(card);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

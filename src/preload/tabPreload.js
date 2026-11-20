@@ -2188,8 +2188,13 @@ function initContextMenuMediaSniffer() {
 
 initContextMenuMediaSniffer();
 
-// 8. Built-in Universal AdBlock Engine (Cosmetic Filtering + Deep Video Ad Auto-Skipper & Defuser)
+// 8. Built-in Universal AdBlock Engine (Cosmetic Filtering + Video Ad Auto-Skipper & Anti-Adblock Defeater)
 function initAdBlockerEngine() {
+  try {
+    const isEnabled = ipcRenderer.sendSync('get-adblock-enabled-sync');
+    if (isEnabled === false) return;
+  } catch (e) {}
+
   // 8.1. Cosmetic Ad-Hiding Styles
   const cosmeticAdStyles = `
     /* Google Ads & DoubleClick */
@@ -2272,53 +2277,6 @@ function initAdBlockerEngine() {
       if (window.__eclipse_adblock_engine_injected__) return;
       window.__eclipse_adblock_engine_injected__ = true;
 
-      // 1. Universal JSON & Object Pruner (uBO json-prune & defuser equivalent)
-      // CRITICAL: SKIP on YouTube — pruning YouTube's internal JSON (playerResponse, etc.) breaks its MSE pipeline
-      try {
-        const _prunerHost = (window.location.hostname || '').toLowerCase();
-        const _isYouTubeSite = _prunerHost.includes('youtube.com') || _prunerHost.includes('youtu.be');
-
-        const pruneAdProperties = (obj) => {
-          if (!obj || typeof obj !== 'object') return obj;
-          if (Array.isArray(obj)) {
-            for (let i = 0; i < obj.length; i++) {
-              if (obj[i] && typeof obj[i] === 'object') pruneAdProperties(obj[i]);
-            }
-          } else {
-            if ('ad_config' in obj) obj.ad_config = null;
-            if ('ads' in obj && !Array.isArray(obj.ads)) obj.ads = null;
-            if ('preroll' in obj) obj.preroll = null;
-            if ('midroll' in obj) obj.midroll = null;
-            if ('postroll' in obj) obj.postroll = null;
-            if ('ad_sections' in obj) obj.ad_sections = [];
-            if ('has_ads' in obj) obj.has_ads = false;
-            if ('video_ads' in obj) obj.video_ads = null;
-            if ('videoAds' in obj) obj.videoAds = null;
-            if ('adman' in obj) obj.adman = null;
-            if ('ad_tag' in obj) obj.ad_tag = '';
-            if ('vast_url' in obj) obj.vast_url = '';
-            if ('vastUrl' in obj) obj.vastUrl = '';
-            if ('preroll_url' in obj) obj.preroll_url = '';
-            if ('adv_url' in obj) obj.adv_url = '';
-            if ('adv' in obj && typeof obj.adv === 'boolean') obj.adv = false;
-            for (const k of Object.keys(obj)) {
-              if (obj[k] && typeof obj[k] === 'object') pruneAdProperties(obj[k]);
-            }
-          }
-          return obj;
-        };
-
-        if (!_isYouTubeSite) {
-          const origJsonParse = JSON.parse;
-          JSON.parse = function(text, reviver) {
-            const res = origJsonParse.apply(this, arguments);
-            if (res && typeof res === 'object') {
-              pruneAdProperties(res);
-            }
-            return res;
-          };
-        }
-      } catch(e) {}
 
       // 2. Anti-Adblock Defeater & Russian/Yandex RSYA Direct Defuser
       try {
@@ -2407,175 +2365,7 @@ function initAdBlockerEngine() {
         };
       } catch (e) {}
 
-      // 4. Anime Player Ad Variable Neutralizers (Kodik, Alloha, VideoCDN, Sibnet)
-      try {
-        window.adv = false;
-        window.adv_url = '';
-        window.vast_url = '';
-        window.vastUrl = '';
-        window.preroll_url = '';
-        window.adConfig = {};
-      } catch (e) {}
 
-      // 5. Google IMA SDK Stub / Defuser (Bypasses IMA VAST/VPAID loader immediately)
-      try {
-        const dummyFn = function() {};
-        const createImaStub = () => ({
-          AdDisplayContainer: function() { return { initialize: dummyFn, destroy: dummyFn }; },
-          AdsLoader: function() {
-            const listeners = {};
-            return {
-              contentComplete: dummyFn,
-              requestAds: function() {
-                setTimeout(() => {
-                  if (listeners['adError']) {
-                    listeners['adError'].forEach(cb => {
-                      try { cb({ type: 'adError', getError: () => ({ getMessage: () => 'Ad skipped' }) }); } catch(e){}
-                    });
-                  }
-                  if (listeners['allAdsCompleted']) {
-                    listeners['allAdsCompleted'].forEach(cb => { try { cb({ type: 'allAdsCompleted' }); } catch(e){} });
-                  }
-                }, 5);
-              },
-              addEventListener: function(evt, cb) {
-                if (!listeners[evt]) listeners[evt] = [];
-                listeners[evt].push(cb);
-              },
-              removeEventListener: dummyFn,
-              destroy: dummyFn
-            };
-          },
-          AdsRequest: function() {},
-          AdsRenderingSettings: function() {},
-          ViewMode: { NORMAL: 'NORMAL', FULLSCREEN: 'FULLSCREEN' },
-          AdError: { Type: { AD_LOAD: 'AD_LOAD' } },
-          AdErrorEvent: { Type: { AD_ERROR: 'adError' } },
-          AdsManagerLoadedEvent: { Type: { ADS_MANAGER_LOADED: 'adsManagerLoaded' } },
-          AdEvent: {
-            Type: {
-              ALL_ADS_COMPLETED: 'allAdsCompleted',
-              COMPLETE: 'complete',
-              SKIPPED: 'skipped',
-              CONTENT_RESUME_REQUESTED: 'contentResumeRequested',
-              PAUSED: 'paused',
-              STARTED: 'started',
-              FIRST_QUARTILE: 'firstQuartile',
-              MIDPOINT: 'midpoint',
-              THIRD_QUARTILE: 'thirdQuartile'
-            }
-          },
-          settings: { setAutoPlayAdBreaks: dummyFn, setDisableCustomPlaybackForIOS10Plus: dummyFn, setLocale: dummyFn }
-        });
-        const host = (window.location.hostname || '').toLowerCase();
-        const isGoogleOrYandex = host.includes('google.') || host.includes('gstatic.') || host.includes('youtube.') || host.includes('yandex.');
-        if (!isGoogleOrYandex) {
-          window.google = window.google || {};
-          if (!window.google.ima) {
-            window.google.ima = createImaStub();
-          }
-        }
-      } catch (e) {}
-
-      // 6. Intercept Fetch & XMLHttpRequest: Sanitize responseText for VK Video & VAST
-      try {
-        const makeNative = window.__eclipse_make_native__ || ((fn) => fn);
-        const origFetch = window.fetch;
-        if (origFetch) {
-          const customFetch = function fetch(input, init) {
-            try {
-              const url = (typeof input === 'string') ? input : (input && input.url) ? input.url : '';
-              if (url) {
-                const lower = url.toLowerCase();
-                if (lower.includes('al_video.php') && (lower.includes('act=get_video_ads') || lower.includes('act=video_ads') || lower.includes('act=get_ad_info'))) {
-                  return Promise.resolve(new Response(JSON.stringify({
-                    payload: [0, { has_ads: false, prerolls: [], midrolls: [], postrolls: [], ads: [] }]
-                  }), {
-                    status: 200,
-                    headers: { 'Content-Type': 'application/json' }
-                  }));
-                }
-                if (lower.includes('vast') || lower.includes('vpaid') || lower.includes('videonow') || lower.includes('viqeo') || lower.includes('buzzoola') || lower.includes('adtarget.me') || lower.includes('digitaltarget') || lower.includes('videoroll') || lower.includes('aniview') || lower.includes('spotx') || lower.includes('springserve') || lower.includes('delivembed') || lower.includes('voidboost') || lower.includes('video_adv') || lower.includes('adman.pro')) {
-                  return Promise.resolve(new Response('<VAST version="3.0"></VAST>', {
-                    status: 200,
-                    headers: { 'Content-Type': 'application/xml' }
-                  }));
-                }
-                if (url.includes('al_video.php')) {
-                  return origFetch.apply(this, arguments).then(async (response) => {
-                    try {
-                      const clone = response.clone();
-                      let text = await clone.text();
-                      if (text.includes('"ad_config"') || text.includes('"ads"') || text.includes('"has_ads"')) {
-                        text = text.replace(/"ad_config"\s*:\s*\{[^}]*\}/g, '"ad_config":null')
-                                   .replace(/"has_ads"\s*:\s*true/g, '"has_ads":false')
-                                   .replace(/"preroll"\s*:\s*\{[^}]*\}/g, '"preroll":null')
-                                   .replace(/"ads"\s*:\s*\{[^}]*\}/g, '"ads":null')
-                                   .replace(/"ad_sections"\s*:\s*\[[^\]]*\]/g, '"ad_sections":[]');
-                        return new Response(text, {
-                          status: response.status,
-                          statusText: response.statusText,
-                          headers: response.headers
-                        });
-                      }
-                    } catch(err) {}
-                    return response;
-                  });
-                }
-              }
-            } catch (err) {}
-            return origFetch.apply(this, arguments);
-          };
-          window.fetch = makeNative(customFetch, 'fetch');
-        }
-
-        const origXhrOpen = XMLHttpRequest.prototype.open;
-        if (origXhrOpen) {
-          const customXhrOpen = function open(method, url) {
-            try {
-              this._eclipseUrl = url || '';
-            } catch (e) {}
-            return origXhrOpen.apply(this, arguments);
-          };
-          XMLHttpRequest.prototype.open = makeNative(customXhrOpen, 'open');
-        }
-
-        const origXhrSend = XMLHttpRequest.prototype.send;
-        if (origXhrSend) {
-          const customXhrSend = function send(body) {
-            try {
-              const url = (this._eclipseUrl || '').toLowerCase();
-              if (url) {
-                if (url.includes('al_video.php') && (url.includes('act=get_video_ads') || url.includes('act=video_ads') || url.includes('act=get_ad_info'))) {
-                  Object.defineProperty(this, 'responseText', { value: '<!--{}-->{"payload":[0,{"has_ads":false,"prerolls":[],"midrolls":[],"postrolls":[],"ads":[]}]}' });
-                  Object.defineProperty(this, 'status', { value: 200 });
-                  Object.defineProperty(this, 'readyState', { value: 4 });
-                  setTimeout(() => {
-                    this.dispatchEvent(new Event('readystatechange'));
-                    this.dispatchEvent(new Event('load'));
-                    this.dispatchEvent(new Event('loadend'));
-                  }, 5);
-                  return;
-                }
-                if (url.includes('vast') || url.includes('vpaid') || url.includes('videonow') || url.includes('viqeo') || url.includes('buzzoola') || url.includes('adtarget.me') || url.includes('digitaltarget') || url.includes('videoroll') || url.includes('aniview') || url.includes('spotx') || url.includes('springserve') || url.includes('delivembed') || url.includes('voidboost') || url.includes('video_adv') || url.includes('adman.pro')) {
-                  Object.defineProperty(this, 'responseText', { value: '<VAST version="3.0"></VAST>' });
-                  Object.defineProperty(this, 'responseXML', { value: new DOMParser().parseFromString('<VAST version="3.0"></VAST>', 'application/xml') });
-                  Object.defineProperty(this, 'status', { value: 200 });
-                  Object.defineProperty(this, 'readyState', { value: 4 });
-                  setTimeout(() => {
-                    this.dispatchEvent(new Event('readystatechange'));
-                    this.dispatchEvent(new Event('load'));
-                    this.dispatchEvent(new Event('loadend'));
-                  }, 5);
-                  return;
-                }
-              }
-            } catch (e) {}
-            return origXhrSend.apply(this, arguments);
-          };
-          XMLHttpRequest.prototype.send = makeNative(customXhrSend, 'send');
-        }
-      } catch (e) {}
 
       // 7. Clickunder / Shady Popunder Guard
       const originalWindowOpen = window.open;
@@ -2712,12 +2502,19 @@ function initAdBlockerEngine() {
               return;
             }
 
-            // For other streaming players (Kodik, Alloha, etc.)
+            // For other streaming players: mute ad and invoke player skip methods
             vid.muted = true;
-            vid.playbackRate = 16.0;
-            if (Number.isFinite(vid.duration) && vid.duration > 0) {
-              vid.currentTime = Math.max(0, vid.duration - 0.05);
-            }
+            try {
+              if (window.cur && window.cur.videoPlayer && typeof window.cur.videoPlayer.skipAd === 'function') {
+                window.cur.videoPlayer.skipAd();
+              }
+              if (window.mvcur && window.mvcur.player && typeof window.mvcur.player.skipAd === 'function') {
+                window.mvcur.player.skipAd();
+              }
+              if (window.videoplayer && typeof window.videoplayer.skipAd === 'function') {
+                window.videoplayer.skipAd();
+              }
+            } catch(e) {}
           }
         } catch(e) {}
       }
