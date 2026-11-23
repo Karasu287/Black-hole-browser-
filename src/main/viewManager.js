@@ -715,13 +715,28 @@ class ViewManager {
           try { view.setBackgroundColor('#ffffff'); } catch(e) {}
         }
       }
+      if (isMainFrame && !isInPlace) {
+        const tab = this.tabs.get(tabId);
+        if (tab) {
+          tab._isMainFrameNavigating = true;
+          if (!tab.isLoading) {
+            tab.isLoading = true;
+            this.notifyTabState(tabId);
+          }
+        }
+      }
     });
 
     wc.on('did-start-loading', () => {
       const tab = this.tabs.get(tabId);
       if (tab) {
-        tab.isLoading = true;
-        this.notifyTabState(tabId);
+        const isMainLoading = (typeof wc.isLoadingMainFrame === 'function' ? wc.isLoadingMainFrame() : false) || Boolean(tab._isMainFrameNavigating);
+        if (isMainLoading) {
+          if (!tab.isLoading) {
+            tab.isLoading = true;
+            this.notifyTabState(tabId);
+          }
+        }
       }
     });
 
@@ -731,20 +746,51 @@ class ViewManager {
     wc.on('did-stop-loading', () => {
       const tab = this.tabs.get(tabId);
       if (tab) {
-        tab.isLoading = false;
-        tab.canGoBack = getCanGoBack();
-        tab.canGoForward = getCanGoForward();
-        this.notifyTabState(tabId);
+        const stillLoadingMain = typeof wc.isLoadingMainFrame === 'function' ? wc.isLoadingMainFrame() : false;
+        if (!stillLoadingMain) {
+          tab._isMainFrameNavigating = false;
+          const wasLoading = tab.isLoading;
+          tab.isLoading = false;
+          tab.canGoBack = getCanGoBack();
+          tab.canGoForward = getCanGoForward();
+          if (wasLoading) {
+            this.notifyTabState(tabId);
+          }
+        }
       }
     });
 
     wc.on('did-finish-load', () => {
       this.applyWebColorScheme(wc);
       const tab = this.tabs.get(tabId);
+      if (tab) {
+        tab._isMainFrameNavigating = false;
+        if (tab.isLoading) {
+          tab.isLoading = false;
+          tab.canGoBack = getCanGoBack();
+          tab.canGoForward = getCanGoForward();
+          this.notifyTabState(tabId);
+        }
+      }
       if (!this.isIncognito && tab && tab.url && tab.url.startsWith('http')) {
         const saved = storage.getPasswordsForOrigin(tab.url);
         if (saved && saved.length > 0) {
           wc.send('fill-credentials', saved);
+        }
+      }
+    });
+
+    wc.on('did-fail-load', (event, errorCode, errorDescription, validatedURL, isMainFrame) => {
+      if (isMainFrame) {
+        const tab = this.tabs.get(tabId);
+        if (tab) {
+          tab._isMainFrameNavigating = false;
+          if (tab.isLoading) {
+            tab.isLoading = false;
+            tab.canGoBack = getCanGoBack();
+            tab.canGoForward = getCanGoForward();
+            this.notifyTabState(tabId);
+          }
         }
       }
     });
@@ -2104,6 +2150,9 @@ class ViewManager {
     }
 
     tab.url = finalUrl;
+    tab._isMainFrameNavigating = true;
+    tab.isLoading = true;
+    this.notifyTabState(tab.id);
     tab.view.webContents.loadURL(finalUrl).catch(e => {
       console.warn('Navigation loadURL error:', e.message);
     });
@@ -2114,7 +2163,12 @@ class ViewManager {
     if (tab && tab.view) {
       const wc = tab.view.webContents;
       const canBack = wc.navigationHistory ? wc.navigationHistory.canGoBack() : (wc.canGoBack ? wc.canGoBack() : false);
-      if (canBack) wc.goBack();
+      if (canBack) {
+        tab._isMainFrameNavigating = true;
+        tab.isLoading = true;
+        this.notifyTabState(this.activeTabId);
+        wc.goBack();
+      }
     }
   }
 
@@ -2123,13 +2177,21 @@ class ViewManager {
     if (tab && tab.view) {
       const wc = tab.view.webContents;
       const canFwd = wc.navigationHistory ? wc.navigationHistory.canGoForward() : (wc.canGoForward ? wc.canGoForward() : false);
-      if (canFwd) wc.goForward();
+      if (canFwd) {
+        tab._isMainFrameNavigating = true;
+        tab.isLoading = true;
+        this.notifyTabState(this.activeTabId);
+        wc.goForward();
+      }
     }
   }
 
   reload(ignoreCache = false) {
     const tab = this.tabs.get(this.activeTabId);
     if (tab && tab.view) {
+      tab._isMainFrameNavigating = true;
+      tab.isLoading = true;
+      this.notifyTabState(this.activeTabId);
       if (ignoreCache) {
         tab.view.webContents.reloadIgnoringCache();
       } else {
@@ -2141,6 +2203,9 @@ class ViewManager {
   stop() {
     const tab = this.tabs.get(this.activeTabId);
     if (tab && tab.view) {
+      tab._isMainFrameNavigating = false;
+      tab.isLoading = false;
+      this.notifyTabState(this.activeTabId);
       tab.view.webContents.stop();
     }
   }

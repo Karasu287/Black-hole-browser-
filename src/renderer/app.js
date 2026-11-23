@@ -139,8 +139,19 @@ async function init() {
   window.electronAPI.onTabStateChanged((state) => {
     const idx = currentTabs.findIndex(t => t.id === state.id);
     if (idx >= 0) {
-      currentTabs[idx] = { ...currentTabs[idx], ...state };
-      renderTabs();
+      const prev = currentTabs[idx];
+      const hasVisualChanged = prev.title !== state.title ||
+                               prev.url !== state.url ||
+                               prev.favicon !== state.favicon ||
+                               prev.isLoading !== state.isLoading ||
+                               prev.isPlayingAudio !== state.isPlayingAudio ||
+                               prev.isSleeping !== state.isSleeping ||
+                               prev.isPinned !== state.isPinned ||
+                               prev.isSplitSecondary !== state.isSplitSecondary;
+      currentTabs[idx] = { ...prev, ...state };
+      if (hasVisualChanged) {
+        renderTabs();
+      }
     }
     if (state.id === activeTabId) {
       updateNavControls(state);
@@ -1111,9 +1122,23 @@ function setupNavigation() {
   });
 }
 
+let currentNavTabId = null;
+let currentNavIsLoading = false;
+let loadProgressTimeout = null;
+
 function updateNavControls(tab) {
   btnBack.disabled = !tab.canGoBack;
   btnForward.disabled = !tab.canGoForward;
+
+  const isSameTab = (currentNavTabId === tab.id);
+  const wasLoading = isSameTab ? currentNavIsLoading : false;
+  currentNavTabId = tab.id;
+  currentNavIsLoading = Boolean(tab.isLoading);
+
+  if (loadProgressTimeout) {
+    clearTimeout(loadProgressTimeout);
+    loadProgressTimeout = null;
+  }
 
   if (tab.isLoading) {
     iconReload.classList.add('hidden');
@@ -1123,11 +1148,17 @@ function updateNavControls(tab) {
   } else {
     iconReload.classList.remove('hidden');
     iconStop.classList.add('hidden');
-    loadProgressBar.style.width = '100%';
-    setTimeout(() => {
+    if (wasLoading) {
+      loadProgressBar.style.width = '100%';
+      loadProgressTimeout = setTimeout(() => {
+        loadProgressBar.classList.remove('loading');
+        loadProgressBar.style.width = '0%';
+        loadProgressTimeout = null;
+      }, 200);
+    } else {
       loadProgressBar.classList.remove('loading');
       loadProgressBar.style.width = '0%';
-    }, 200);
+    }
   }
 
   if (document.activeElement !== omniboxInput) {
