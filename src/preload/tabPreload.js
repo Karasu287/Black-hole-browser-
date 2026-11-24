@@ -1249,6 +1249,117 @@ function initPictureInPictureEngine() {
         }, 1000);
       }
 
+      // 4.1. Вспомогательные функции для регулировки громкости и показа экранного индикатора (OSD)
+      function showVolumeOsd(percent) {
+        try {
+          const player = document.getElementById('movie_player') || document.querySelector('.html5-video-player') || (getActiveVideo() && getActiveVideo().parentElement);
+          if (!player) return;
+          let osd = player.querySelector('.bh-volume-osd');
+          if (!osd) {
+            osd = document.createElement('div');
+            osd.className = 'bh-volume-osd';
+            osd.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(10,10,16,0.85);color:#fff;padding:10px 20px;border-radius:12px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:16px;font-weight:700;z-index:99999;pointer-events:none;backdrop-filter:blur(8px);border:1px solid rgba(168,85,247,0.4);box-shadow:0 8px 24px rgba(0,0,0,0.6);display:flex;align-items:center;gap:10px;transition:opacity 0.2s ease;';
+            player.appendChild(osd);
+          }
+          const icon = percent === 0 ? '🔇' : (percent < 50 ? '🔉' : '🔊');
+          osd.innerHTML = '<span>' + icon + '</span> <span>Громкость: ' + percent + '%</span>';
+          osd.style.opacity = '1';
+          clearTimeout(osd.__hideTimer);
+          osd.__hideTimer = setTimeout(() => {
+            osd.style.opacity = '0';
+          }, 800);
+        } catch (e) {}
+      }
+
+      function adjustVideoVolume(delta) {
+        const v = getActiveVideo();
+        try {
+          const ytPlayer = document.getElementById('movie_player') || document.querySelector('.html5-video-player');
+          if (ytPlayer && typeof ytPlayer.getVolume === 'function' && typeof ytPlayer.setVolume === 'function') {
+            if (delta > 0 && typeof ytPlayer.isMuted === 'function' && ytPlayer.isMuted()) {
+              ytPlayer.unMute();
+            }
+            const current = ytPlayer.getVolume();
+            const target = Math.max(0, Math.min(100, Math.round(current + delta * 100)));
+            ytPlayer.setVolume(target);
+            if (target === 0 && typeof ytPlayer.mute === 'function') {
+              ytPlayer.mute();
+            }
+            if (v) v.volume = target / 100;
+            showVolumeOsd(target);
+            return;
+          }
+        } catch (e) {}
+        if (v) {
+          if (delta > 0 && v.muted) v.muted = false;
+          const target = Math.max(0, Math.min(1, Math.round((v.volume + delta) * 100) / 100));
+          v.volume = target;
+          if (target === 0) v.muted = true;
+          showVolumeOsd(Math.round(target * 100));
+        }
+      }
+
+      function isUserTyping(target) {
+        const active = document.activeElement;
+        const elements = [target, active].filter(Boolean);
+        for (const el of elements) {
+          const tag = (el.tagName || '').toUpperCase();
+          if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+          if (el.isContentEditable) return true;
+          if (typeof el.closest === 'function') {
+            if (el.closest('input, textarea, select, [contenteditable="true"], #search-input, ytd-commentbox, yt-formatted-string[contenteditable], [role="textbox"]')) {
+              return true;
+            }
+          }
+        }
+        return false;
+      }
+
+      // Жесткая привязка стрелок на клавиатуре:
+      // Влево / Вправо — ВСЕГДА и ТОЛЬКО перемотка видео на 5 секунд.
+      // Вверх / Вниз — ВСЕГДА и ТОЛЬКО громкость (+5% / -5%).
+      // Никаких случайных подмен громкости при фокусе на ползунке громкости YouTube!
+      window.addEventListener('keydown', (e) => {
+        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+
+        if (isUserTyping(e.target)) return;
+
+        const v = getActiveVideo();
+        if (!v) return;
+
+        const isYouTube = window.location.hostname.includes('youtube.com');
+        const isPip = document.pictureInPictureElement === v;
+        const isFullscreen = Boolean(document.fullscreenElement && (document.fullscreenElement.contains(v) || document.fullscreenElement === v));
+        const isPlayerFocused = Boolean(document.activeElement && (document.activeElement.closest && (document.activeElement.closest('#movie_player') || document.activeElement.closest('.html5-video-player'))));
+
+        if (!isYouTube && !isPip && !isFullscreen && !isPlayerFocused) {
+          return;
+        }
+
+        // Перехватываем событие в фазе capture, чтобы YouTube не перепутал стрелки при фокусе на слайдере громкости
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+
+        // Снимаем фокус с элементов управления громкостью, если пользователь на них кликал
+        if (document.activeElement && typeof document.activeElement.blur === 'function') {
+          if (document.activeElement.closest && (document.activeElement.closest('.ytp-volume-area') || document.activeElement.closest('.ytp-volume-panel') || document.activeElement.closest('.ytp-mute-button'))) {
+            document.activeElement.blur();
+          }
+        }
+
+        if (e.key === 'ArrowLeft') {
+          doSeek(-5);
+        } else if (e.key === 'ArrowRight') {
+          doSeek(5);
+        } else if (e.key === 'ArrowUp') {
+          adjustVideoVolume(0.05);
+        } else if (e.key === 'ArrowDown') {
+          adjustVideoVolume(-0.05);
+        }
+      }, true);
+
       // Регулировка звука колесиком мыши:
       // Применяется только в Picture-in-Picture, Fullscreen или при наведении непосредственно на регулятор громкости,
       // чтобы не ломать и не блокировать обычный скроллинг страницы на YouTube
@@ -1261,9 +1372,9 @@ function initPictureInPictureEngine() {
 
         if (isPip || isFullscreen || isOverVolumeSlider) {
           if (e.deltaY < 0) {
-            v.volume = Math.min(1, v.volume + 0.05);
+            adjustVideoVolume(0.05);
           } else if (e.deltaY > 0) {
-            v.volume = Math.max(0, v.volume - 0.05);
+            adjustVideoVolume(-0.05);
           }
         }
       }, { passive: true });
