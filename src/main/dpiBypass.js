@@ -11,15 +11,42 @@ class DpiBypassManager {
     this.port = 19808;
     this.enabled = true;
     this.isRunning = false;
+    this.engine = 'none'; // 'system-zapret' | 'bundled-zapret' | 'byedpi' | 'none'
+    this._pollInterval = null;
   }
 
-  getBinaryPath() {
+  isSystemZapretRunning() {
+    try {
+      const out = execSync('tasklist /FI "IMAGENAME eq winws.exe" /NH 2>nul', { windowsHide: true }).toString();
+      return out.toLowerCase().includes('winws.exe');
+    } catch (e) {
+      return false;
+    }
+  }
+
+  getWinwsBinaryPath() {
+    const candidates = [
+      path.join(__dirname, 'bin', 'zapret', 'winws.exe'),
+      path.join(app.getAppPath(), 'src', 'main', 'bin', 'zapret', 'winws.exe'),
+      path.join(process.resourcesPath || '', 'app', 'src', 'main', 'bin', 'zapret', 'winws.exe'),
+      path.join(process.resourcesPath || '', 'app.asar.unpacked', 'src', 'main', 'bin', 'zapret', 'winws.exe'),
+      'C:\\Users\\Karasu\\Documents\\zapret-discord-youtube-1.10.3\\bin\\winws.exe'
+    ];
+
+    for (const p of candidates) {
+      if (fs.existsSync(p)) {
+        return p;
+      }
+    }
+    return null;
+  }
+
+  getCiadpiBinaryPath() {
     const candidates = [
       path.join(__dirname, 'bin', 'ciadpi.exe'),
       path.join(app.getAppPath(), 'src', 'main', 'bin', 'ciadpi.exe'),
       path.join(process.resourcesPath || '', 'app', 'src', 'main', 'bin', 'ciadpi.exe'),
-      path.join(process.resourcesPath || '', 'app.asar.unpacked', 'src', 'main', 'bin', 'ciadpi.exe'),
-      path.join(__dirname, '..', '..', 'bin', 'ciadpi.exe')
+      path.join(process.resourcesPath || '', 'app.asar.unpacked', 'src', 'main', 'bin', 'ciadpi.exe')
     ];
 
     for (const p of candidates) {
@@ -56,7 +83,25 @@ class DpiBypassManager {
       await this.start();
     }
 
-    // Ensure clean child process shutdown on browser exit
+    // Monitor for changes in system Zapret state every 10 seconds
+    if (!this._pollInterval) {
+      this._pollInterval = setInterval(() => {
+        if (!this.enabled) return;
+        const systemRunning = this.isSystemZapretRunning();
+        if (systemRunning && this.engine !== 'system-zapret') {
+          console.log('[Black hole Browser] ⚡ External Zapret detected! Switching to direct transparent mode.');
+          this.stopProcessOnly();
+          this.engine = 'system-zapret';
+          this.isRunning = true;
+          this.applyProxyToSessions(false);
+          this.broadcastState();
+        } else if (!systemRunning && this.engine === 'system-zapret') {
+          console.log('[Black hole Browser] ⚡ External Zapret stopped! Launching internal bypass.');
+          this.start();
+        }
+      }, 10000);
+    }
+
     const cleanup = () => this.stop();
     app.on('will-quit', cleanup);
     app.on('before-quit', cleanup);
@@ -64,22 +109,115 @@ class DpiBypassManager {
   }
 
   async start() {
-    if (this.isRunning && this.process) return true;
+    if (!this.enabled) return false;
 
-    const binPath = this.getBinaryPath();
+    // 1. Check if Zapret (winws.exe) is ALREADY running on the user's PC (e.g. Flowseal service)
+    if (this.isSystemZapretRunning()) {
+      console.log('[Black hole Browser] ⚡ System Zapret (Flowseal / WinWS) active on OS! Using direct transparent mode.');
+      this.stopProcessOnly();
+      this.engine = 'system-zapret';
+      this.isRunning = true;
+      this.applyProxyToSessions(false); // DIRECT mode: WinDivert filters packets transparently!
+      this.broadcastState();
+      return true;
+    }
+
+    // 2. Try launching bundled Flowseal Zapret (winws.exe)
+    const winwsPath = this.getWinwsBinaryPath();
+    if (winwsPath) {
+      const started = await this.startBundledZapret(winwsPath);
+      if (started) {
+        return true;
+      }
+    }
+
+    // 3. Fallback: launch ByeDPI (ciadpi.exe) with local proxy if WinDivert driver cannot be loaded
+    console.log('[Black hole Browser] Zapret requires driver privileges, falling back to ByeDPI proxy engine.');
+    return await this.startByeDpi();
+  }
+
+  async startBundledZapret(winwsPath) {
+    try {
+      const zapretBinDir = path.dirname(winwsPath);
+      const zapretListsDir = path.join(zapretBinDir, 'lists');
+      const listGoogle = path.join(zapretListsDir, 'list-google.txt');
+      const fakeTls = path.join(zapretBinDir, 'tls_clienthello_www_google_com.bin');
+      const fakeQuic = path.join(zapretBinDir, 'quic_initial_www_google_com.bin');
+
+      // Flowseal proven desync configuration for YouTube
+      const args = [
+        '--wf-tcp=80,443',
+        '--wf-udp=443',
+        '--filter-udp=443',
+        `--hostlist=${listGoogle}`,
+        '--dpi-desync=fake',
+        '--dpi-desync-repeats=6',
+        `--dpi-desync-fake-quic=${fakeQuic}`,
+        '--new',
+        '--filter-tcp=443',
+        `--hostlist=${listGoogle}`,
+        '--ip-id=zero',
+        '--dpi-desync=fake,multisplit',
+        '--dpi-desync-split-seqovl=681',
+        '--dpi-desync-split-pos=1',
+        '--dpi-desync-fooling=ts',
+        '--dpi-desync-repeats=8',
+        `--dpi-desync-split-seqovl-pattern=${fakeTls}`,
+        `--dpi-desync-fake-tls=${fakeTls}`
+      ];
+
+      this.process = spawn(winwsPath, args, {
+        cwd: zapretBinDir,
+        windowsHide: true,
+        stdio: 'ignore',
+        detached: false
+      });
+
+      let failedEarly = false;
+      this.process.on('error', () => {
+        failedEarly = true;
+      });
+
+      this.process.on('exit', () => {
+        if (this.engine === 'bundled-zapret') {
+          this.isRunning = false;
+          this.process = null;
+          this.engine = 'none';
+          this.applyProxyToSessions(false);
+          this.broadcastState();
+        }
+      });
+
+      // Wait 400ms to verify winws doesn't exit immediately (e.g. WinDivert driver error code 5)
+      await new Promise(r => setTimeout(r, 400));
+      if (failedEarly || !this.process || this.process.exitCode !== null) {
+        this.process = null;
+        return false;
+      }
+
+      this.isRunning = true;
+      this.engine = 'bundled-zapret';
+      this.applyProxyToSessions(false); // WinDivert works transparently, no proxy needed!
+      this.broadcastState();
+      console.log('[Black hole Browser] ⚡ Built-in Flowseal Zapret (winws) active! Direct packet desynchronization enabled.');
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async startByeDpi() {
+    const binPath = this.getCiadpiBinaryPath();
     if (!binPath) {
       console.warn('[Black hole Browser] DPI Bypass: ciadpi.exe binary not found');
       return false;
     }
 
     try {
-      // 1. Kill any orphaned ciadpi process lingering from crashes or previous sessions
       try {
         execSync('taskkill /F /IM ciadpi.exe /T 2>nul || exit 0', { windowsHide: true, shell: true });
       } catch (e) {}
 
-      // 2. Desynchronization parameters tuned specifically for Russian TSPU / YouTube unthrottling
-      // Uses split + disorder with 2s timeout and TLS record fragmentation
       const args = [
         '-i', '127.0.0.1',
         '-p', String(this.port),
@@ -107,11 +245,9 @@ class DpiBypassManager {
         console.log(`[Black hole Browser] DPI Bypass exited with code ${code}`);
         this.isRunning = false;
         this.process = null;
-        // CRITICAL: Immediately reset sessions to DIRECT if process dies, preventing browser hangs
         this.applyProxyToSessions(false);
       });
 
-      // 3. Verify that the proxy socket is actually listening before applying proxy to Chromium sessions
       const isListening = await this.waitForPort(this.port, 15, 60);
       if (!isListening) {
         console.warn(`[Black hole Browser] DPI Bypass: Port ${this.port} did not respond, aborting proxy set`);
@@ -120,26 +256,34 @@ class DpiBypassManager {
       }
 
       this.isRunning = true;
+      this.engine = 'byedpi';
       this.applyProxyToSessions(true);
-      console.log(`[Black hole Browser] ⚡ YouTube DPI Bypass active on 127.0.0.1:${this.port}`);
+      this.broadcastState();
+      console.log(`[Black hole Browser] ⚡ YouTube DPI Bypass (ByeDPI) active on 127.0.0.1:${this.port}`);
       return true;
     } catch (e) {
-      console.error('[Black hole Browser] Failed to launch DPI Bypass:', e);
+      console.error('[Black hole Browser] Failed to launch ByeDPI:', e);
       this.isRunning = false;
       this.applyProxyToSessions(false);
       return false;
     }
   }
 
-  stop() {
-    this.applyProxyToSessions(false);
+  stopProcessOnly() {
     if (this.process) {
       try {
         this.process.kill();
       } catch (e) {}
       this.process = null;
     }
+  }
+
+  stop() {
+    this.stopProcessOnly();
+    this.applyProxyToSessions(false);
     this.isRunning = false;
+    this.engine = 'none';
+    this.broadcastState();
   }
 
   applyProxyToSessions(enable) {
@@ -148,8 +292,10 @@ class DpiBypassManager {
       sessions.push(session.fromPartition('incognito'));
     } catch (e) {}
 
-    if (enable && this.isRunning) {
-      // PAC script targeting only Google / YouTube media & interface endpoints
+    // IMPORTANT: Proxy is ONLY applied when running ByeDPI local proxy.
+    // When using Zapret (system or bundled winws), WinDivert works at the kernel driver layer
+    // and requires standard DIRECT connections!
+    if (enable && this.isRunning && this.engine === 'byedpi') {
       const pacScript = `
         function FindProxyForURL(url, host) {
           if (!host) return "DIRECT";
@@ -183,13 +329,21 @@ class DpiBypassManager {
         }
       }
     } else {
-      // Reset to direct connections
+      // Direct connections for Zapret or when bypass is disabled
       for (const ses of sessions) {
         if (ses && typeof ses.setProxy === 'function') {
           ses.setProxy({ mode: 'direct' }).catch(() => {});
         }
       }
     }
+  }
+
+  broadcastState() {
+    BrowserWindow.getAllWindows().forEach((win) => {
+      if (!win.isDestroyed()) {
+        win.webContents.send('dpi-bypass-state-changed', this.getStatus());
+      }
+    });
   }
 
   async toggle(enable) {
@@ -203,16 +357,7 @@ class DpiBypassManager {
       this.stop();
     }
 
-    // Notify all windows
-    BrowserWindow.getAllWindows().forEach((win) => {
-      if (!win.isDestroyed()) {
-        win.webContents.send('dpi-bypass-state-changed', {
-          enabled: this.enabled,
-          active: this.isRunning
-        });
-      }
-    });
-
+    this.broadcastState();
     return this.enabled;
   }
 
@@ -220,6 +365,7 @@ class DpiBypassManager {
     return {
       enabled: this.enabled,
       active: this.isRunning,
+      engine: this.engine,
       port: this.port
     };
   }
