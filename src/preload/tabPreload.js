@@ -1249,28 +1249,7 @@ function initPictureInPictureEngine() {
         }, 1000);
       }
 
-      // 4.1. Вспомогательные функции для регулировки громкости и показа экранного индикатора (OSD)
-      function showVolumeOsd(percent) {
-        try {
-          const player = document.getElementById('movie_player') || document.querySelector('.html5-video-player') || (getActiveVideo() && getActiveVideo().parentElement);
-          if (!player) return;
-          let osd = player.querySelector('.bh-volume-osd');
-          if (!osd) {
-            osd = document.createElement('div');
-            osd.className = 'bh-volume-osd';
-            osd.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(10,10,16,0.85);color:#fff;padding:10px 20px;border-radius:12px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:16px;font-weight:700;z-index:99999;pointer-events:none;backdrop-filter:blur(8px);border:1px solid rgba(168,85,247,0.4);box-shadow:0 8px 24px rgba(0,0,0,0.6);display:flex;align-items:center;gap:10px;transition:opacity 0.2s ease;';
-            player.appendChild(osd);
-          }
-          const icon = percent === 0 ? '🔇' : (percent < 50 ? '🔉' : '🔊');
-          osd.innerHTML = '<span>' + icon + '</span> <span>Громкость: ' + percent + '%</span>';
-          osd.style.opacity = '1';
-          clearTimeout(osd.__hideTimer);
-          osd.__hideTimer = setTimeout(() => {
-            osd.style.opacity = '0';
-          }, 800);
-        } catch (e) {}
-      }
-
+      // 4.1. Вспомогательная функция регулировки громкости видео
       function adjustVideoVolume(delta) {
         const v = getActiveVideo();
         try {
@@ -1286,7 +1265,6 @@ function initPictureInPictureEngine() {
               ytPlayer.mute();
             }
             if (v) v.volume = target / 100;
-            showVolumeOsd(target);
             return;
           }
         } catch (e) {}
@@ -1295,7 +1273,6 @@ function initPictureInPictureEngine() {
           const target = Math.max(0, Math.min(1, Math.round((v.volume + delta) * 100) / 100));
           v.volume = target;
           if (target === 0) v.muted = true;
-          showVolumeOsd(Math.round(target * 100));
         }
       }
 
