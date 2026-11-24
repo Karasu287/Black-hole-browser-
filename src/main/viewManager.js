@@ -584,15 +584,15 @@ class ViewManager {
         [class*="direct-ads"], [class*="yandex-ad"], .direct-widget,
         [data-ad-client], [data-ad-slot], [data-ya-widget], [data-ya-slot],
         [id^="adfox_"], [class*="adfox_"], [class*="rsya"], [id*="rsya"],
-        div[data-ad], .ad-wrapper, .ad-box,
+        .ad-banner-box, .ad-wrapper-block,
         [id*="adriver"], [class*="adriver"], [id*="mailru_ad"], [class*="mailru_ad"],
 
         /* Anime / Streaming Player Ads (Kodik, Alloha, VideoCDN, Sibnet, Voidboost, Collaps, Ashdi, Lumex, HDRezka) */
-        .kodik-ad, .alloha-ad, .ad-container, .vast-ad, .vpaid-ad, .video-ad-overlay,
-        .preroll-container, .preroll-ad, .ad-overlay, .player-ad-overlay,
+        .kodik-ad, .alloha-ad, .vast-ad, .vpaid-ad, .video-ad-overlay,
+        .preroll-container, .preroll-ad, .player-ad-overlay, .video-ad-container,
         .vast-block, .vpaid-block, .ad-interstitial, .vjs-ad-playing,
         div[class*="clickunder"], div[id*="clickunder"], div[class*="popunder"],
-        .kodik-overlay, .alloha-click-overlay, div[class*="ad_overlay"], div[id*="ad_overlay"],
+        .kodik-overlay, .alloha-click-overlay,
         .adsbygoogle, iframe[src*="doubleclick.net"], iframe[src*="googlesyndication.com"],
         .adblock-modal, .adblock-overlay, #adblock-message, .adblock-notice {
           display: none !important;
@@ -602,6 +602,26 @@ class ViewManager {
           min-height: 0 !important;
           width: 0 !important;
           pointer-events: none !important;
+        }
+
+        /* CRITICAL: YouTube & Video Player Captions & Subtitles MUST ALWAYS remain visible */
+        #ytp-caption-window-container,
+        .ytp-caption-window-container,
+        .caption-window,
+        .ytp-caption-window-bottom,
+        .ytp-caption-window-rollup,
+        .captions-text,
+        .caption-visual-line {
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          pointer-events: auto !important;
+        }
+        .ytp-caption-segment {
+          display: inline !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          pointer-events: auto !important;
         }
       `;
 

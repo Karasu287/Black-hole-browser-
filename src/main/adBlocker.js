@@ -169,40 +169,44 @@ class AdBlocker {
     if (!ses || !ses.webRequest) return;
 
     ses.webRequest.onBeforeRequest((details, callback) => {
-      if (!this.enabled) {
-        return callback({ cancel: false });
-      }
-
-      const url = details.url || '';
-      const wcId = details.webContentsId;
-      const resourceType = details.resourceType || '';
-
-      // Never block internal browser protocols
-      if (url.startsWith('eclipse://') || url.startsWith('blackhole://') || url.startsWith('chrome://') || url.startsWith('devtools://') || url.startsWith('file://')) {
-        return callback({ cancel: false });
-      }
-
-      // Check if current tab domain is whitelisted
-      const initiator = details.initiator || details.referrer || '';
-      let domain = '';
       try {
-        if (initiator) domain = new URL(initiator).hostname.toLowerCase();
-      } catch (e) {}
+        if (!this.enabled) {
+          return callback({ cancel: false });
+        }
 
-      if (domain && storage.isDomainWhitelisted(domain)) {
+        const url = details.url || '';
+        const wcId = details.webContentsId;
+        const resourceType = details.resourceType || '';
+
+        // Never block internal browser protocols
+        if (url.startsWith('eclipse://') || url.startsWith('blackhole://') || url.startsWith('chrome://') || url.startsWith('devtools://') || url.startsWith('file://')) {
+          return callback({ cancel: false });
+        }
+
+        // Check if current tab domain is whitelisted
+        const initiator = details.initiator || details.referrer || '';
+        let domain = '';
+        try {
+          if (initiator) domain = new URL(initiator).hostname.toLowerCase();
+        } catch (e) {}
+
+        if (domain && storage.isDomainWhitelisted(domain)) {
+          return callback({ cancel: false });
+        }
+
+        // Check URL against Ad Block database
+        if (this.shouldBlockUrl(url, resourceType)) {
+          this.recordBlock(wcId, url, domain);
+          // Cleanly cancel the request with ERR_BLOCKED_BY_CLIENT.
+          // Never redirect cross-origin subresources or media to data: URIs,
+          // which violates CORS and crashes Chromium NetworkService.
+          return callback({ cancel: true });
+        }
+
+        return callback({ cancel: false });
+      } catch (err) {
         return callback({ cancel: false });
       }
-
-      // Check URL against Ad Block database
-      if (this.shouldBlockUrl(url, resourceType)) {
-        this.recordBlock(wcId, url, domain);
-        // Cleanly cancel the request with ERR_BLOCKED_BY_CLIENT.
-        // Never redirect cross-origin subresources or media to data: URIs,
-        // which violates CORS and crashes Chromium NetworkService.
-        return callback({ cancel: true });
-      }
-
-      return callback({ cancel: false });
     });
   }
 
@@ -211,6 +215,11 @@ class AdBlocker {
       const urlObj = new URL(url);
       const hostname = urlObj.hostname.toLowerCase();
       const pathname = urlObj.pathname.toLowerCase();
+
+      // 0. High-priority whitelist for subtitles, captions, and transcripts (YouTube & media players)
+      if (pathname.includes('/timedtext') || pathname.includes('/transcript') || url.includes('timedtext') || pathname.endsWith('.vtt') || pathname.endsWith('.srt')) {
+        return false;
+      }
 
       // 1. Whitelist all official first-party Google, YouTube, and GStatic services
       if (hostname.endsWith('.google.com') || hostname === 'google.com' ||
@@ -221,6 +230,8 @@ class AdBlocker {
           hostname.endsWith('.googleapis.com') || hostname === 'googleapis.com' ||
           hostname.endsWith('.gstatic.com') || hostname === 'gstatic.com' ||
           hostname.endsWith('.ggpht.com') || hostname === 'ggpht.com' ||
+          hostname.endsWith('.ytimg.com') || hostname === 'ytimg.com' ||
+          hostname.endsWith('.youtube-nocookie.com') || hostname === 'youtube-nocookie.com' ||
           hostname.endsWith('.google.ru') || hostname === 'google.ru' ||
           hostname.endsWith('.1e100.net') || hostname.endsWith('.gvt1.com')) {
         // Block only explicit third-party ad delivery endpoints on Google/YouTube domains
@@ -330,12 +341,17 @@ class AdBlocker {
   }
 
   notifyTabStatsThrottled(wcId) {
-    if (this._notifyTimeout) return;
-    this._notifyTimeout = setTimeout(() => {
-      this._notifyTimeout = null;
+    if (!wcId) return;
+    this._notifyTimeouts = this._notifyTimeouts || new Map();
+    if (this._notifyTimeouts.has(wcId)) return;
+
+    const timeout = setTimeout(() => {
+      if (this._notifyTimeouts) this._notifyTimeouts.delete(wcId);
       const count = this.tabStats.get(wcId) || 0;
       this.notifyTabStats(wcId, count);
     }, 250);
+
+    this._notifyTimeouts.set(wcId, timeout);
   }
 
   notifyTabStats(wcId, count) {

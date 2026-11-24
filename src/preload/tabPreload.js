@@ -2310,7 +2310,7 @@ function initAdBlockerEngine() {
     [class*="direct-ads"], [class*="yandex-ad"], .direct-widget,
     [data-ad-client], [data-ad-slot], [data-ya-widget], [data-ya-slot],
     [id^="adfox_"], [class*="adfox_"], [class*="rsya"], [id*="rsya"],
-    div[data-ad], .ad-wrapper, .ad-box,
+    .ad-banner-box, .ad-wrapper-block,
     [id*="adriver"], [class*="adriver"], [id*="mailru_ad"], [class*="mailru_ad"],
     
     /* Native & Widget Teasers */
@@ -2332,11 +2332,11 @@ function initAdBlockerEngine() {
     [class*="erid" i], [class*="Erid" i], [class*="ERID" i],
     
     /* Anime / Streaming Player Ads (Kodik, Alloha, VideoCDN, Sibnet, Voidboost, Collaps, Ashdi, Lumex, HDRezka) */
-    .kodik-ad, .alloha-ad, .ad-container, .vast-ad, .vpaid-ad, .video-ad-overlay,
-    .preroll-container, .preroll-ad, .ad-overlay, .player-ad-overlay,
+    .kodik-ad, .alloha-ad, .vast-ad, .vpaid-ad, .video-ad-overlay,
+    .preroll-container, .preroll-ad, .player-ad-overlay, .video-ad-container,
     .vast-block, .vpaid-block, .ad-interstitial, .vjs-ad-playing,
     div[class*="clickunder"], div[id*="clickunder"], div[class*="popunder"],
-    .kodik-overlay, .alloha-click-overlay, div[class*="ad_overlay"], div[id*="ad_overlay"],
+    .kodik-overlay, .alloha-click-overlay,
     
     /* YouTube Ad Slots & Overlays — feed/page ad slots only (NOT player internals!) */
     ytd-ad-slot-renderer, ytd-banner-promo-renderer, ytd-statement-banner-renderer,
@@ -2358,6 +2358,26 @@ function initAdBlockerEngine() {
       min-height: 0 !important;
       width: 0 !important;
       pointer-events: none !important;
+    }
+
+    /* CRITICAL: YouTube & Video Player Captions & Subtitles MUST ALWAYS remain visible */
+    #ytp-caption-window-container,
+    .ytp-caption-window-container,
+    .caption-window,
+    .ytp-caption-window-bottom,
+    .ytp-caption-window-rollup,
+    .captions-text,
+    .caption-visual-line {
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      pointer-events: auto !important;
+    }
+    .ytp-caption-segment {
+      display: inline !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      pointer-events: auto !important;
     }
   `;
 
@@ -2500,7 +2520,9 @@ function initAdBlockerEngine() {
       // Only executes work when an actual <video> element exists! Pure audio sites (e.g. VK Music) consume 0.00% CPU!
       // Explicit ad skip selectors only (generic skip buttons like Rutube "Пропустить заставку" are strictly excluded!)
       const targetedSkipSelectors = [
-        '.ytp-ad-skip-button', '.ytp-ad-skip-button-modern', '.ytp-skip-ad-button', '.ytp-ad-skip-button-container button',
+        '.ytp-ad-skip-button', '.ytp-ad-skip-button-modern', '.ytp-skip-ad-button',
+        '.ytp-ad-skip-button-container button', '.ytp-ad-skip-button-slot button',
+        '.ytp-ad-overlay-close-button', '.ytp-ad-overlay-close-container button',
         '.videoplayer_ad_skip', '.videoplayer__ad_skip', '[class*="videoplayer_ad_skip"]',
         '.vast-skip-button', '.vjs-skip-ad-button',
         '.video-ad-skip', '.preroll-skip', '.kodik-ad-skip', '.alloha-skip-ad'
@@ -2587,16 +2609,24 @@ function initAdBlockerEngine() {
               if (ytPlayer && typeof ytPlayer.skipAd === 'function') {
                 try { ytPlayer.skipAd(); } catch(e){}
               }
-              const skipBtn = document.querySelector('.ytp-ad-skip-button, .ytp-ad-skip-button-modern, .ytp-skip-ad-button, .ytp-ad-skip-button-container button');
+              const skipBtn = document.querySelector('.ytp-ad-skip-button, .ytp-ad-skip-button-modern, .ytp-skip-ad-button, .ytp-ad-skip-button-container button, .ytp-ad-skip-button-slot button, .ytp-ad-overlay-close-button');
               if (skipBtn && typeof skipBtn.click === 'function') {
                 skipBtn.click();
               }
               // Mute the ad video but do NOT change playbackRate — YouTube MSE doesn't support rates > 2x
+              if (!vid.__wasAdMuted) {
+                vid.__wasAdMuted = true;
+                vid.__originalMuted = vid.muted;
+              }
               vid.muted = true;
               return;
             }
 
             // For other streaming players: mute ad and invoke player skip methods
+            if (!vid.__wasAdMuted) {
+              vid.__wasAdMuted = true;
+              vid.__originalMuted = vid.muted;
+            }
             vid.muted = true;
             try {
               if (window.cur && window.cur.videoPlayer && typeof window.cur.videoPlayer.skipAd === 'function') {
@@ -2609,6 +2639,9 @@ function initAdBlockerEngine() {
                 window.videoplayer.skipAd();
               }
             } catch(e) {}
+          } else if (vid.__wasAdMuted) {
+            vid.__wasAdMuted = false;
+            vid.muted = vid.__originalMuted !== undefined ? vid.__originalMuted : false;
           }
         } catch(e) {}
       }
@@ -2649,10 +2682,16 @@ function initAdBlockerEngine() {
             }
           }
 
-          // Hide overlays if present
+          // Hide overlays if present, but NEVER hide anything containing or inside subtitle containers!
           const overlays = document.querySelectorAll(targetedOverlaySelectors);
           for (const ov of overlays) {
             if (ov && ov.style.display !== 'none') {
+              if (typeof ov.closest === 'function' && ov.closest('#ytp-caption-window-container, .ytp-caption-window-container, .caption-window, .captions-text')) {
+                continue;
+              }
+              if (typeof ov.querySelector === 'function' && ov.querySelector('#ytp-caption-window-container, .ytp-caption-window-container, .caption-window, .captions-text')) {
+                continue;
+              }
               ov.style.setProperty('display', 'none', 'important');
               ov.style.setProperty('visibility', 'hidden', 'important');
             }
