@@ -141,7 +141,11 @@ app.commandLine.appendSwitch('enable-gpu-rasterization');
 app.commandLine.appendSwitch('enable-accelerated-video-decode');
 app.commandLine.appendSwitch('enable-accelerated-2d-canvas');
 app.commandLine.appendSwitch('enable-features', 'OverlayScrollbar,ParallelDownloading');
-app.commandLine.appendSwitch('disable-features', 'MediaRouter,DialMediaRouteProvider');
+// CRITICAL: Disable QUIC (HTTP/3 UDP) and Post-Quantum Kyber (ML-KEM) key exchange.
+// In Russia, TSPU heavily throttles UDP port 443 on GoogleVideo IPs, and oversized Kyber ClientHello (3.5KB)
+// breaks TLS desynchronization and gets blocked by TSPU. Disabling forces clean standard TLS 1.3 over TCP.
+app.commandLine.appendSwitch('disable-quic');
+app.commandLine.appendSwitch('disable-features', 'MediaRouter,DialMediaRouteProvider,PostQuantumKyber,PostQuantumKeyAgreement,X25519Kyber768,X25519Kyber768Draft00');
 app.commandLine.appendSwitch('disable-blink-features', 'AutomationControlled');
 // Chromium native background timer throttling is preserved: drastically cuts CPU/RAM when Alt-Tabbed
 app.commandLine.appendSwitch('enable-background-thread-pool');

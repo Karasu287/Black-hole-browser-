@@ -568,7 +568,9 @@ function setupIpcHandlers(mainWindow) {
       }
     }
     if (newSettings && newSettings.youtubeDpiBypassEnabled !== undefined) {
-      dpiBypass.toggle(newSettings.youtubeDpiBypassEnabled);
+      if (dpiBypass.enabled !== newSettings.youtubeDpiBypassEnabled) {
+        dpiBypass.toggle(newSettings.youtubeDpiBypassEnabled);
+      }
     }
 
     // Broadcast settings and neon theme update to all windows and views

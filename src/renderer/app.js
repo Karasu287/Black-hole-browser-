@@ -1974,9 +1974,19 @@ function setupSettingsUI() {
   const dpiBypassToggle = document.getElementById('setting-dpi-bypass-toggle');
   if (dpiBypassToggle) {
     dpiBypassToggle.addEventListener('change', async (e) => {
-      saveSetting('youtubeDpiBypassEnabled', e.target.checked);
       if (window.electronAPI && typeof window.electronAPI.toggleDpiBypass === 'function') {
         await window.electronAPI.toggleDpiBypass(e.target.checked);
+      } else {
+        saveSetting('youtubeDpiBypassEnabled', e.target.checked);
+      }
+    });
+  }
+
+  if (window.electronAPI && typeof window.electronAPI.onDpiBypassStateChanged === 'function') {
+    window.electronAPI.onDpiBypassStateChanged((data) => {
+      const toggle = document.getElementById('setting-dpi-bypass-toggle');
+      if (toggle && data && typeof data.enabled === 'boolean') {
+        toggle.checked = data.enabled;
       }
     });
   }
