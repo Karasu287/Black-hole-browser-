@@ -1249,11 +1249,17 @@ function initPictureInPictureEngine() {
         }, 1000);
       }
 
-      // Регулировка звука колесиком мыши над видео
+      // Регулировка звука колесиком мыши:
+      // Применяется только в Picture-in-Picture, Fullscreen или при наведении непосредственно на регулятор громкости,
+      // чтобы не ломать и не блокировать обычный скроллинг страницы на YouTube
       window.addEventListener('wheel', (e) => {
         const v = getActiveVideo();
         if (!v) return;
-        if (document.pictureInPictureElement === v || (e.target && (e.target.closest && e.target.closest('#movie_player')))) {
+        const isPip = document.pictureInPictureElement === v;
+        const isFullscreen = Boolean(document.fullscreenElement && (document.fullscreenElement.contains(v) || document.fullscreenElement === v));
+        const isOverVolumeSlider = Boolean(e.target && e.target.closest && (e.target.closest('.ytp-volume-area') || e.target.closest('.ytp-volume-panel') || e.target.closest('[class*="volume"]')));
+
+        if (isPip || isFullscreen || isOverVolumeSlider) {
           if (e.deltaY < 0) {
             v.volume = Math.min(1, v.volume + 0.05);
           } else if (e.deltaY > 0) {
