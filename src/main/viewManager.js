@@ -594,13 +594,26 @@ class ViewManager {
         div[class*="clickunder"], div[id*="clickunder"], div[class*="popunder"],
         .kodik-overlay, .alloha-click-overlay,
         .adsbygoogle, iframe[src*="doubleclick.net"], iframe[src*="googlesyndication.com"],
-        .adblock-modal, .adblock-overlay, #adblock-message, .adblock-notice {
+        .adblock-modal, .adblock-overlay, #adblock-message, .adblock-notice,
+
+        /* Myinstants & Web Ad Banners, Sidebars & Placeholders */
+        #top-ad, #bottom-ad, #left-ad, #right-ad,
+        .responsive-banner, .responsive-large-banner, .responsive-skyscraper,
+        .large-rectangle-ad-mobile-only, [data-fuse],
+        div[id="top-ad"], div[id="bottom-ad"], div[id="left-ad"], div[id="right-ad"],
+        div[class*="responsive-banner"], div[class*="responsive-skyscraper"] {
           display: none !important;
           visibility: hidden !important;
           opacity: 0 !important;
           height: 0 !important;
           min-height: 0 !important;
           width: 0 !important;
+          min-width: 0 !important;
+          max-width: 0 !important;
+          max-height: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          background: none !important;
           pointer-events: none !important;
         }
 
@@ -625,7 +638,34 @@ class ViewManager {
         }
       `;
 
-      frame.insertCSS(cosmeticCSS, { cssOrigin: 'user' }).catch(() => {});
+      let extraCSS = '';
+      try {
+        const frameUrl = (frame && (frame.url || (typeof frame.getURL === 'function' ? frame.getURL() : '')) || '').toLowerCase();
+        if (frameUrl.includes('myinstants.com')) {
+          extraCSS = `
+            #content {
+              max-width: 95vw !important;
+              width: 95% !important;
+              margin: 20px auto 100px !important;
+            }
+            #instants_container {
+              max-width: 100% !important;
+              width: 100% !important;
+              margin: 20px auto !important;
+            }
+            .instants {
+              max-width: 100% !important;
+              width: 100% !important;
+              display: flex !important;
+              flex-wrap: wrap !important;
+              justify-content: center !important;
+              gap: 28px 18px !important;
+            }
+          `;
+        }
+      } catch (e) {}
+
+      frame.insertCSS(cosmeticCSS + extraCSS, { cssOrigin: 'user' }).catch(() => {});
     } catch (err) {}
   }
 

@@ -34,6 +34,7 @@ class AdBlocker {
       'adman.pro', 'adman.ru', 'mediax.ru', 'rbth.com', 'begun.ru',
 
       // Global Ad Networks & Exchangers
+      'fuseplatform.net', 'cdn.fuseplatform.net', 'publift.com',
       'criteo.com', 'static.criteo.net', 'bidder.criteo.com',
       'taboola.com', 'cdn.taboola.com', 'trc.taboola.com',
       'outbrain.com', 'widgets.outbrain.com', 'log.outbrain.com',

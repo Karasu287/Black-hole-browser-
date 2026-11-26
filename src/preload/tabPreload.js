@@ -2350,13 +2350,26 @@ function initAdBlockerEngine() {
     
     /* Anti-Adblock Annoyances */
     .adblock-modal, .adblock-overlay, #adblock-message, .adblock-notice,
-    [class*="adblock-banner"], [id*="adblock"] {
+    [class*="adblock-banner"], [id*="adblock"],
+
+    /* Myinstants & Web Ad Banners, Sidebars & Placeholders */
+    #top-ad, #bottom-ad, #left-ad, #right-ad,
+    .responsive-banner, .responsive-large-banner, .responsive-skyscraper,
+    .large-rectangle-ad-mobile-only, [data-fuse],
+    div[id="top-ad"], div[id="bottom-ad"], div[id="left-ad"], div[id="right-ad"],
+    div[class*="responsive-banner"], div[class*="responsive-skyscraper"] {
       display: none !important;
       visibility: hidden !important;
       opacity: 0 !important;
       height: 0 !important;
       min-height: 0 !important;
+      max-height: 0 !important;
       width: 0 !important;
+      min-width: 0 !important;
+      max-width: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      background: none !important;
       pointer-events: none !important;
     }
 
@@ -2775,3 +2788,106 @@ function initBackgroundAudioOptimizer() {
 }
 
 initBackgroundAudioOptimizer();
+
+// 10. Myinstants Layout & Clean View Optimizer
+function initMyinstantsOptimizer() {
+  try {
+    const host = (window.location.hostname || '').toLowerCase();
+    if (!host.includes('myinstants.com')) return;
+
+    const myinstantsStyle = `
+      /* Completely eliminate all ad boxes and placeholders */
+      #top-ad, #bottom-ad, #left-ad, #right-ad,
+      .responsive-banner, .responsive-large-banner, .responsive-skyscraper,
+      .large-rectangle-ad-mobile-only, [data-fuse] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        width: 0 !important;
+        height: 0 !important;
+        min-width: 0 !important;
+        min-height: 0 !important;
+        max-width: 0 !important;
+        max-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: none !important;
+        pointer-events: none !important;
+      }
+
+      /* Expand content container across full screen width */
+      #content {
+        max-width: 95vw !important;
+        width: 95% !important;
+        margin: 20px auto 100px !important;
+      }
+
+      /* Distribute sound buttons evenly across the page */
+      #instants_container {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 20px auto !important;
+      }
+
+      .instants {
+        max-width: 100% !important;
+        width: 100% !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        gap: 28px 18px !important;
+      }
+    `;
+
+    try {
+      webFrame.insertCSS(myinstantsStyle, { cssOrigin: 'user' });
+    } catch (e) {}
+
+    const applyLayoutFix = () => {
+      try {
+        const adSelectors = ['#top-ad', '#bottom-ad', '#left-ad', '#right-ad', '.responsive-banner', '.responsive-skyscraper', '[data-fuse]'];
+        adSelectors.forEach(sel => {
+          document.querySelectorAll(sel).forEach(el => {
+            el.style.setProperty('display', 'none', 'important');
+            el.style.setProperty('width', '0px', 'important');
+            el.style.setProperty('height', '0px', 'important');
+            el.style.setProperty('background', 'none', 'important');
+          });
+        });
+
+        const content = document.getElementById('content');
+        if (content) {
+          content.style.setProperty('max-width', '95vw', 'important');
+          content.style.setProperty('width', '95%', 'important');
+        }
+
+        const instantsContainer = document.getElementById('instants_container');
+        if (instantsContainer) {
+          instantsContainer.style.setProperty('max-width', '100%', 'important');
+          instantsContainer.style.setProperty('width', '100%', 'important');
+        }
+
+        const instants = document.querySelector('.instants');
+        if (instants) {
+          instants.style.setProperty('max-width', '100%', 'important');
+          instants.style.setProperty('width', '100%', 'important');
+          instants.style.setProperty('justify-content', 'center', 'important');
+        }
+      } catch (e) {}
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', applyLayoutFix);
+    } else {
+      applyLayoutFix();
+    }
+
+    const obs = new MutationObserver(() => {
+      applyLayoutFix();
+    });
+    obs.observe(document.documentElement || document.body, { childList: true, subtree: true });
+  } catch (e) {}
+}
+
+initMyinstantsOptimizer();
+
